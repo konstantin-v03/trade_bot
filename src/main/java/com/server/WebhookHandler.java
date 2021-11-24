@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WebhookHandler implements HttpHandler {
-    private static final long DELAY = 300;
-
     private final RequestSender requestSender;
 
     public WebhookHandler(RequestSender requestSender) {
@@ -90,13 +88,13 @@ public class WebhookHandler implements HttpHandler {
         if (myTrade != null) {
             TradeLogger.logCloseOrder(myTrade);
         } else {
-            TradeLogger.logException(new NullPointerException("MyTrade = null"));
+            TradeLogger.logException(new NullPointerException("MyTrade = null!"));
         }
 
         if (position != null) {
             TradeLogger.logOpenOrder(position);
         } else {
-            TradeLogger.logException(new NullPointerException("Position = null"));
+            TradeLogger.logException(new NullPointerException("Position = null!"));
         }
 
         String response = "OK";

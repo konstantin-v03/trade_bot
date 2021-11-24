@@ -8,6 +8,10 @@ import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.Ability;
 import org.telegram.abilitybots.api.objects.Locality;
 import org.telegram.abilitybots.api.objects.Privacy;
+import org.telegram.abilitybots.api.toggle.CustomToggle;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 public class TradeBot extends AbilityBot {
     private static final String SUCCESS_STR = "✅ Success";
@@ -15,8 +19,20 @@ public class TradeBot extends AbilityBot {
 
     private final long creatorId;
 
+    private static final CustomToggle toggle = new CustomToggle()
+            .turnOff("ban")
+            .turnOff("demote")
+            .turnOff("promote")
+            .turnOff("stats")
+            .turnOff("unban")
+            .turnOff("backup")
+            .turnOff("claim")
+            .turnOff("recover")
+            .turnOff("report")
+            .toggle("commands", "start");
+
     public TradeBot(String botToken, String botUsername, long creatorId) {
-        super(botToken, botUsername);
+        super(botToken, botUsername, toggle);
         this.creatorId = creatorId;
         TradeLogger.silentSender = silent;
         TradeLogger.chatId = creatorId;
@@ -27,10 +43,10 @@ public class TradeBot extends AbilityBot {
         return creatorId;
     }
 
-    public Ability addCoin() {
+    public Ability enableCoin() {
         return Ability.builder()
-                .name("addcoin")
-                .info("/addcoin SYMBOL AMOUNT ({amount}$ or {amount}%) LEVERAGE")
+                .name("encoin")
+                .info("Enables coin, requires 3 args: symbol, amount ({number}{$} or {number}{%}, leverage.")
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(3)
@@ -58,7 +74,7 @@ public class TradeBot extends AbilityBot {
     public Ability getCoin() {
         return Ability.builder()
                 .name("getcoin")
-                .info("/getcoin SYMBOL")
+                .info("Returns enabled coin by symbol, requires 1 arg: symbol.")
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(1)
@@ -73,6 +89,7 @@ public class TradeBot extends AbilityBot {
     public Ability getCoins() {
         return Ability.builder()
                 .name("getcoins")
+                .info("Returns all enabled coins, requires no args.")
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(0)
@@ -80,15 +97,78 @@ public class TradeBot extends AbilityBot {
                 .build();
     }
 
-    public Ability removeCoin() {
+    public Ability disableCoin() {
         return Ability.builder()
-                .name("rmcoin")
-                .info("/rmcoin SYMBOL")
+                .name("discoin")
+                .info("/discoin SYMBOL")
+                .privacy(Privacy.CREATOR)
+                .locality(Locality.USER)
+                .input(1)
+                .action(ctx -> silent.send(GlobalVariables.enabledCoins.remove(ctx.firstArg()) != null ? SUCCESS_STR : ERROR_STR, ctx.chatId()))
+                .build();
+    }
+
+    public Ability getCoinLog() {
+        return Ability.builder()
+                .name("gcoinlog")
+                .info("Returns coin log file, requires 1 arg: symbol.")
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(1)
                 .action(ctx -> {
-                    silent.send(GlobalVariables.enabledCoins.remove(ctx.firstArg()) != null ? SUCCESS_STR : ERROR_STR, ctx.chatId());
+                    try {
+                        execute(SendDocument
+                                .builder()
+                                .document(new InputFile().setMedia(TradeLogger.getOrderLogFile(ctx.firstArg())))
+                                .chatId(String.valueOf(ctx.chatId()))
+                                .build());
+                    } catch (TelegramApiException telegramApiException) {
+                        silent.send(ERROR_STR, ctx.chatId());
+                    }
+                })
+                .build();
+    }
+
+    public Ability getCoinsLog() {
+        return Ability.builder()
+                .name("gcoinlogs")
+                .info("Returns enabled coin log files, requires no args.")
+                .privacy(Privacy.CREATOR)
+                .locality(Locality.USER)
+                .input(0)
+                .action(ctx -> {
+                    try {
+                        for (String symbol : GlobalVariables.enabledCoins.keySet()) {
+                            execute(SendDocument
+                                    .builder()
+                                    .document(new InputFile().setMedia(TradeLogger.getOrderLogFile(symbol)))
+                                    .chatId(String.valueOf(ctx.chatId()))
+                                    .build());
+                        }
+                    } catch (TelegramApiException telegramApiException) {
+                        silent.send(ERROR_STR, ctx.chatId());
+                    }
+                })
+                .build();
+    }
+
+    public Ability getExceptions() {
+        return Ability.builder()
+                .name("gexcs")
+                .info("Returns exceptions file, requires no args.")
+                .privacy(Privacy.CREATOR)
+                .locality(Locality.USER)
+                .input(1)
+                .action(ctx -> {
+                    try {
+                        execute(SendDocument
+                                .builder()
+                                .document(new InputFile().setMedia(TradeLogger.getExceptionFile()))
+                                .chatId(String.valueOf(ctx.chatId()))
+                                .build());
+                    } catch (TelegramApiException telegramApiException) {
+                        silent.send(ERROR_STR, ctx.chatId());
+                    }
                 })
                 .build();
     }

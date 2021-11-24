@@ -11,12 +11,21 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class TradeLogger {
+    private static final String LOG_ORDER_DIR = "orders/";
+    private static final String EXCEPTION_FILE_NAME = "exception.txt";
+
     public static SilentSender silentSender = null;
     public static Long chatId = null;
 
+    static {
+        if (!new File(LOG_ORDER_DIR).mkdir()) {
+            System.err.println("Orders directory was now created!");
+        }
+    }
+
     public static void logOpenOrder(Position position) {
         try {
-            logFile(position.getSymbol() + ".txt", String.format("%s OPEN %s %s$",
+            logFile(getLogOrderPath(position.getSymbol()), String.format("%s OPEN %s %s$",
                     getFormatDate(),
                     position.getPositionSide(),
                     position.getEntryPrice()));
@@ -28,7 +37,7 @@ public class TradeLogger {
 
     public static void logCloseOrder(MyTrade myTrade) {
         try {
-            logFile(myTrade.getSymbol() + ".txt", String.format("%s CLOSE %s %s$ %s$",
+            logFile(getLogOrderPath(myTrade.getSymbol()), String.format("%s CLOSE %s %s$ %s$",
                     getFormatDate(),
                     myTrade.getPositionSide(),
                     myTrade.getPrice(),
@@ -41,12 +50,20 @@ public class TradeLogger {
 
     public static void logException(Exception exception) {
         try {
-            logFile("exceptions.txt",
+            logFile(EXCEPTION_FILE_NAME,
                     getFormatDate() + " " + exception);
             logTgBot(String.format("⛔ Error occured: \"%s\"", exception));
         } catch (IOException ignored) {
 
         }
+    }
+
+    public static File getExceptionFile() {
+        return new File(EXCEPTION_FILE_NAME);
+    }
+
+    public static File getOrderLogFile(String symbol) {
+        return new File(getLogOrderPath(symbol));
     }
 
     public static void logFile(String fileName, String log) throws IOException {
@@ -67,6 +84,10 @@ public class TradeLogger {
         if (silentSender != null && chatId != null) {
             silentSender.send(log, chatId);
         }
+    }
+
+    private static String getLogOrderPath(String symbol) {
+        return LOG_ORDER_DIR + symbol + ".txt";
     }
 
     private static String getFormatDate() {

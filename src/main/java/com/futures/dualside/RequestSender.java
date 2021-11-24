@@ -84,7 +84,7 @@ public class RequestSender {
         BigDecimal amountUSD = null;
 
         if (amount.getType().equals(Amount.TYPE.PERCENT)) {
-            amountUSD = Amount.getAmountUSD(amount.getAmount(), getAvailableBalance(symbol));
+            amountUSD = Amount.getAmountUSD(amount.getAmount(), getAvailableBalance(getAssetBySymbol(symbol)));
         } else if (amount.getType().equals(Amount.TYPE.USD)){
             amountUSD = amount.getAmount();
         }
@@ -130,20 +130,24 @@ public class RequestSender {
         return false;
     }
 
-    private BigDecimal getAvailableBalance(String symbol) {
-        String asset = getAssetBySymbol(symbol);
+    private BigDecimal getAvailableBalance(String asset) {
+        List<AccountBalance> accountBalances = syncRequestClient
+                .getBalance()
+                .stream()
+                .filter(accountBalance -> accountBalance.getAsset().equals(asset))
+                .collect(Collectors.toList());
 
-        if (asset != null) {
-            List<AccountBalance> accountBalances = syncRequestClient
-                    .getBalance()
-                    .stream()
-                    .filter(accountBalance -> accountBalance.getAsset().equals(asset))
-                    .collect(Collectors.toList());
+        return accountBalances.size() == 1 ? accountBalances.get(0).getWithdrawAvailable() : null;
+    }
 
-            return accountBalances.size() == 1 ? accountBalances.get(0).getWithdrawAvailable() : null;
-        }
+    private BigDecimal getBalance(String asset) {
+        List<AccountBalance> accountBalances = syncRequestClient
+                .getBalance()
+                .stream()
+                .filter(accountBalance -> accountBalance.getAsset().equals(asset))
+                .collect(Collectors.toList());
 
-        return null;
+        return accountBalances.size() == 1 ? accountBalances.get(0).getBalance() : null;
     }
 
     private String getAssetBySymbol(String symbol) {
