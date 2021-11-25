@@ -89,15 +89,9 @@ public class RequestSender {
             amountUSD = amount.getAmount();
         }
 
-        amountUSD = amountUSD.multiply(new BigDecimal(leverage));
-
-        BigDecimal quantity = amountUSD.divide(getLastPrice(symbol), RoundingMode.FLOOR);
-
-        BigDecimal stepSize = new BigDecimal(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+        BigDecimal quantity = amountUSD.multiply(new BigDecimal(leverage)).divide(getLastPrice(symbol), new BigDecimal(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
                 FilterType.MARKET_LOT_SIZE,
-                "stepSize"));
-
-        quantity = quantity.divide(stepSize, RoundingMode.FLOOR).setScale(0, RoundingMode.FLOOR).multiply(stepSize);
+                "stepSize")).scale(), RoundingMode.FLOOR);
 
         List<PositionRisk> positionRisks = syncRequestClient.getPositionRisk();
         PositionRisk positionRisk = getPositionRisk(positionRisks, symbol, positionSide);

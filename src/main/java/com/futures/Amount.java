@@ -47,7 +47,7 @@ public class Amount {
     }
 
     public static BigDecimal getAmountUSD(BigDecimal amountPercent, BigDecimal availableBalance) {
-        return availableBalance.multiply(amountPercent.setScale(0, RoundingMode.FLOOR).divide(new BigDecimal(100), RoundingMode.FLOOR));
+        return availableBalance.multiply(amountPercent.divide(new BigDecimal(100), 1, RoundingMode.FLOOR));
     }
 
     @Override

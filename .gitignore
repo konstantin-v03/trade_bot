@@ -1,3 +1,6 @@
 /testkey.jks
 /logs/
 /.idea/
+/props.xml
+/orders/
+/exception.txt

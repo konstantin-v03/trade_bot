@@ -32,7 +32,10 @@ public class TradeLogger {
                     getFormatDate(),
                     position.getPositionSide(),
                     position.getEntryPrice()));
-            logTgBot(String.format("%s %s OPEN %s %s$", position.getPositionSide().equals("LONG") ? "\uD83D\uDCC8" : "\uD83D\uDCC9", position.getSymbol(), position.getPositionSide(), position.getEntryPrice()));
+            logTgBot(String.format("%s %s OPEN %s %s$", position.getPositionSide().equals("LONG") ? "\uD83D\uDCC8" : "\uD83D\uDCC9",
+                    position.getSymbol(),
+                    position.getPositionSide(),
+                    position.getEntryPrice()));
         } catch (IOException ignored) {
 
         }
