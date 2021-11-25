@@ -13,6 +13,15 @@ import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
+
 public class TradeBot extends AbilityBot {
     private static final String SUCCESS_STR = "✅ Success";
     private static final String ERROR_STR = "❌ Something went wrong...";
@@ -137,16 +146,16 @@ public class TradeBot extends AbilityBot {
                 .locality(Locality.USER)
                 .input(0)
                 .action(ctx -> {
-                    try {
-                        for (String symbol : GlobalVariables.enabledCoins.keySet()) {
+                    for (String symbol : GlobalVariables.enabledCoins.keySet()) {
+                        try {
                             execute(SendDocument
                                     .builder()
                                     .document(new InputFile().setMedia(TradeLogger.getOrderLogFile(symbol)))
                                     .chatId(String.valueOf(ctx.chatId()))
                                     .build());
+                        } catch (TelegramApiException telegramApiException) {
+                            silent.send(symbol + ": " + ERROR_STR, ctx.chatId());
                         }
-                    } catch (TelegramApiException telegramApiException) {
-                        silent.send(ERROR_STR, ctx.chatId());
                     }
                 })
                 .build();
@@ -158,7 +167,7 @@ public class TradeBot extends AbilityBot {
                 .info("Returns exceptions file, requires no args.")
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
-                .input(1)
+                .input(0)
                 .action(ctx -> {
                     try {
                         execute(SendDocument
@@ -168,6 +177,40 @@ public class TradeBot extends AbilityBot {
                                 .build());
                     } catch (TelegramApiException telegramApiException) {
                         silent.send(ERROR_STR, ctx.chatId());
+                    }
+                })
+                .build();
+    }
+
+    public Ability getTotalProfit() {
+        return Ability.builder()
+                .name("getprofit")
+                .info("Returns total profit based on logs, requires 1 arg: symbol.")
+                .privacy(Privacy.CREATOR)
+                .locality(Locality.USER)
+                .input(1)
+                .action(ctx -> {
+                    BigDecimal totalProfit = TradeLogger.getTotalProfit(ctx.firstArg());
+
+                    silent.send(ctx.firstArg() + ": " + (totalProfit != null ? totalProfit + "$" : ERROR_STR), ctx.chatId());
+                })
+                .build();
+    }
+
+    public Ability getTotalProfits() {
+        return Ability.builder()
+                .name("getprofits")
+                .info("Returns total profit of enabled coins based on logs, requires no args.")
+                .privacy(Privacy.CREATOR)
+                .locality(Locality.USER)
+                .input(0)
+                .action(ctx -> {
+                    BigDecimal totalProfit;
+
+                    for (String symbol : GlobalVariables.enabledCoins.keySet()) {
+                        totalProfit = TradeLogger.getTotalProfit(symbol);
+
+                        silent.send(symbol + ": " + (totalProfit != null ? totalProfit + "$" : ERROR_STR), ctx.chatId());
                     }
                 })
                 .build();

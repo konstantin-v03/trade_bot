@@ -7,8 +7,11 @@ import org.telegram.abilitybots.api.sender.SilentSender;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.text.Bidi;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.*;
 
 public class TradeLogger {
     private static final String LOG_ORDER_DIR = "orders/";
@@ -84,6 +87,40 @@ public class TradeLogger {
         if (silentSender != null && chatId != null) {
             silentSender.send(log, chatId);
         }
+    }
+
+    public static BigDecimal getTotalProfit(String symbol) {
+        List<List<String>> lines;
+        BigDecimal totalProfit = new BigDecimal(BigInteger.ZERO);
+
+        try {
+            Scanner scanner = new Scanner(TradeLogger.getOrderLogFile(symbol));
+
+            lines = new ArrayList<>();
+
+            while (scanner.hasNextLine()) {
+                lines.add(new ArrayList<>(Arrays.asList(scanner.nextLine().split(" "))));
+            }
+
+            scanner.close();
+        } catch (IOException ioException) {
+            return null;
+        }
+
+        String word;
+
+        try {
+            for (List<String> line : lines) {
+                if (line.size() > 5 && line.get(2).equals("CLOSE")) {
+                    word = line.get(5);
+                    totalProfit = totalProfit.add(new BigDecimal(word.substring(0, word.length() - 1)));
+                }
+            }
+        } catch (IllegalArgumentException illegalArgumentException) {
+            return null;
+        }
+
+        return totalProfit;
     }
 
     private static String getLogOrderPath(String symbol) {
