@@ -1,15 +1,21 @@
 package com.futures;
 
+import org.jetbrains.annotations.NonNls;
+
 public class Coin {
-    public final String symbol;
+    private final String ticket;
 
     private final Amount amount;
     private final int leverage;
 
-    public Coin(String symbol, Amount amount, int leverage) {
-        this.symbol = symbol;
+    public Coin(String ticket, Amount amount, int leverage) {
+        this.ticket = ticket;
         this.amount = amount;
         this.leverage = leverage;
+    }
+
+    public String getTicket() {
+        return ticket;
     }
 
     public Amount getAmount() {
@@ -20,10 +26,11 @@ public class Coin {
         return leverage;
     }
 
+    @NonNls
     @Override
     public String toString() {
         return "Coin{" +
-                "symbol='" + symbol + '\'' +
+                "ticket='" + ticket + '\'' +
                 ", amount=" + amount +
                 ", leverage=" + leverage +
                 '}';

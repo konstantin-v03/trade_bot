@@ -4,6 +4,8 @@ import com.futures.Amount;
 import com.futures.Coin;
 import com.futures.GlobalVariables;
 import com.log.TradeLogger;
+import com.utils.I18nSupport;
+import org.jetbrains.annotations.NonNls;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.Ability;
 import org.telegram.abilitybots.api.objects.Locality;
@@ -13,21 +15,15 @@ import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
 
 public class TradeBot extends AbilityBot {
-    private static final String SUCCESS_STR = "✅ Success";
-    private static final String ERROR_STR = "❌ Something went wrong...";
+    private static final String SUCCESS_STR = I18nSupport.i18n_literals("success");
+    private static final String ERROR_STR = I18nSupport.i18n_literals("error");
 
     private final long creatorId;
 
+    @NonNls
     private static final CustomToggle toggle = new CustomToggle()
             .turnOff("ban")
             .turnOff("demote")
@@ -54,8 +50,8 @@ public class TradeBot extends AbilityBot {
 
     public Ability enableCoin() {
         return Ability.builder()
-                .name("encoin")
-                .info("Enables coin, requires 3 args: symbol, amount ({number}{$} or {number}{%}, leverage.")
+                .name(I18nSupport.i18n_literals("encoin"))
+                .info(I18nSupport.i18n_literals("encoin.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(3)
@@ -82,8 +78,8 @@ public class TradeBot extends AbilityBot {
 
     public Ability getCoin() {
         return Ability.builder()
-                .name("getcoin")
-                .info("Returns enabled coin by symbol, requires 1 arg: symbol.")
+                .name(I18nSupport.i18n_literals("getcoin"))
+                .info(I18nSupport.i18n_literals("getcoin.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(1)
@@ -97,8 +93,8 @@ public class TradeBot extends AbilityBot {
 
     public Ability getCoins() {
         return Ability.builder()
-                .name("getcoins")
-                .info("Returns all enabled coins, requires no args.")
+                .name(I18nSupport.i18n_literals("getcoins"))
+                .info(I18nSupport.i18n_literals("getcoins.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(0)
@@ -108,8 +104,8 @@ public class TradeBot extends AbilityBot {
 
     public Ability disableCoin() {
         return Ability.builder()
-                .name("discoin")
-                .info("/discoin SYMBOL")
+                .name(I18nSupport.i18n_literals("discoin"))
+                .info(I18nSupport.i18n_literals("discoin.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(1)
@@ -119,8 +115,8 @@ public class TradeBot extends AbilityBot {
 
     public Ability getCoinLog() {
         return Ability.builder()
-                .name("gcoinlog")
-                .info("Returns coin log file, requires 1 arg: symbol.")
+                .name(I18nSupport.i18n_literals("gcoinlog"))
+                .info(I18nSupport.i18n_literals("gcoinlog.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(1)
@@ -140,8 +136,8 @@ public class TradeBot extends AbilityBot {
 
     public Ability getCoinsLog() {
         return Ability.builder()
-                .name("gcoinlogs")
-                .info("Returns enabled coin log files, requires no args.")
+                .name(I18nSupport.i18n_literals("gcoinlogs"))
+                .info(I18nSupport.i18n_literals("gcoinlogs.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(0)
@@ -163,8 +159,8 @@ public class TradeBot extends AbilityBot {
 
     public Ability getExceptions() {
         return Ability.builder()
-                .name("gexcs")
-                .info("Returns exceptions file, requires no args.")
+                .name(I18nSupport.i18n_literals("gexcs"))
+                .info(I18nSupport.i18n_literals("gexcs.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(0)
@@ -184,8 +180,8 @@ public class TradeBot extends AbilityBot {
 
     public Ability getTotalProfit() {
         return Ability.builder()
-                .name("getprofit")
-                .info("Returns total profit based on logs, requires 1 arg: symbol.")
+                .name(I18nSupport.i18n_literals("getprofit"))
+                .info(I18nSupport.i18n_literals("getprofit.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(1)
@@ -199,8 +195,8 @@ public class TradeBot extends AbilityBot {
 
     public Ability getTotalProfits() {
         return Ability.builder()
-                .name("getprofits")
-                .info("Returns total profit of enabled coins based on logs, requires no args.")
+                .name(I18nSupport.i18n_literals("getprofits"))
+                .info(I18nSupport.i18n_literals("getprofits.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(0)

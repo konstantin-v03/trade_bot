@@ -3,8 +3,8 @@ package com;
 import com.binance.client.RequestOptions;
 import com.binance.client.SyncRequestClient;
 import com.futures.dualside.RequestSender;
-import com.server.WebhookHandler;
 import com.server.WebhookReceiver;
+import com.strategies.AltcoinsHandler;
 import com.tgbot.TradeBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -13,10 +13,11 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.text.ParseException;
 import java.util.Properties;
 
 public class Main {
-    public static void main(String[] args) throws GeneralSecurityException, IOException {
+    public static void main(String[] args) throws GeneralSecurityException, IOException, ParseException {
         Properties properties = readPropertiesFile(args[0]);
 
         try {
@@ -33,7 +34,7 @@ public class Main {
         SyncRequestClient syncRequestClient = SyncRequestClient.create(properties.getProperty("apikey"), properties.getProperty("secretkey"),
                 options);
 
-        WebhookReceiver.start("/" + properties.getProperty("context"), new WebhookHandler(new RequestSender(syncRequestClient)));
+        WebhookReceiver.start("/" + properties.getProperty("context"), new AltcoinsHandler(new RequestSender(syncRequestClient)));
     }
 
     public static Properties readPropertiesFile(String fileName) {

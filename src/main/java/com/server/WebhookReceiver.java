@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpsServer;
+import org.jetbrains.annotations.NonNls;
 
 import javax.net.ssl.*;
 import java.io.FileInputStream;
@@ -23,7 +24,7 @@ public class WebhookReceiver {
         webhookReceiver.httpsServer = HttpsServer.create(new InetSocketAddress(443), 0);
         SSLContext sslContext = SSLContext.getInstance("TLS");
 
-        char[] password = "password".toCharArray();
+        @NonNls char[] password = "password".toCharArray();
         KeyStore ks = KeyStore.getInstance("JKS");
         FileInputStream fis = new FileInputStream("testkey.jks");
         ks.load(fis, password);

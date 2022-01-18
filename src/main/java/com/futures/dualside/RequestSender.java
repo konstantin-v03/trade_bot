@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class RequestSender {
@@ -64,7 +65,7 @@ public class RequestSender {
         return positions.size() == 1 ? positions.get(0) : null;
     }
 
-    private synchronized Long closePositionMarket(String symbol, PositionSide positionSide) {
+    public synchronized Long closePositionMarket(String symbol, PositionSide positionSide) {
         OrderSide orderSide = positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY;
         PositionRisk positionRisk = getPositionRisk(syncRequestClient.getPositionRisk(), symbol, positionSide);
 
@@ -78,33 +79,33 @@ public class RequestSender {
         return order != null ? order.getOrderId() : null;
     }
 
-    private synchronized boolean openPositionMarket(String symbol, OrderSide orderSide, MarginType marginType, PositionSide positionSide, Amount amount, int leverage) throws NullPointerException{
+    public synchronized boolean openPositionMarket(String symbol, OrderSide orderSide, MarginType marginType, PositionSide positionSide, Amount amount, int leverage){
         ExchangeInfoEntry exchangeInfoEntry = getExchangeInfo(symbol);
 
         BigDecimal amountUSD = null;
 
         if (amount.getType().equals(Amount.TYPE.PERCENT)) {
-            amountUSD = Amount.getAmountUSD(amount.getAmount(), getAvailableBalance(getAssetBySymbol(symbol)));
+            amountUSD = Amount.getAmountUSD(amount.getAmount(), Objects.requireNonNull(getAvailableBalance(getAssetBySymbol(symbol))));
         } else if (amount.getType().equals(Amount.TYPE.USD)){
             amountUSD = amount.getAmount();
         }
 
-        BigDecimal quantity = amountUSD.multiply(new BigDecimal(leverage)).divide(getLastPrice(symbol), new BigDecimal(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+        BigDecimal quantity = Objects.requireNonNull(amountUSD).multiply(new BigDecimal(leverage)).divide(getLastPrice(symbol), new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(Objects.requireNonNull(exchangeInfoEntry).getFilters(),
                 FilterType.MARKET_LOT_SIZE,
-                "stepSize")).scale(), RoundingMode.FLOOR);
+                "stepSize"))).scale(), RoundingMode.FLOOR);
 
         List<PositionRisk> positionRisks = syncRequestClient.getPositionRisk();
         PositionRisk positionRisk = getPositionRisk(positionRisks, symbol, positionSide);
 
-        if (positionRisk != null && quantity.compareTo(new BigDecimal(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+        if (positionRisk != null && quantity.compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
                 FilterType.MARKET_LOT_SIZE,
-                "minQty"))) >= 0 &&
-                quantity.compareTo(new BigDecimal(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
-                FilterType.MARKET_LOT_SIZE,
-                "maxQty"))) <= 0 &&
-                quantity.multiply(getLastPrice(symbol)).compareTo(new BigDecimal(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+                "minQty")))) >= 0 &&
+                quantity.compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+                        FilterType.MARKET_LOT_SIZE,
+                        "maxQty")))) <= 0 &&
+                quantity.multiply(getLastPrice(symbol)).compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
                         FilterType.MIN_NOTIONAL,
-                        "notional"))) >= 0) {
+                        "notional")))) >= 0) {
 
             if (positionRisk.getLeverage().compareTo(new BigDecimal(leverage)) != 0) {
                 syncRequestClient.changeInitialLeverage(symbol, leverage);
