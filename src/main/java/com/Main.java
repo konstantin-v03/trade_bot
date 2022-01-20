@@ -13,28 +13,27 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.text.ParseException;
 import java.util.Properties;
 
 public class Main {
-    public static void main(String[] args) throws GeneralSecurityException, IOException, ParseException {
+    public static void main(String[] args) throws GeneralSecurityException, IOException {
         Properties properties = readPropertiesFile(args[0]);
+
+        RequestOptions options = new RequestOptions();
+
+        RequestSender requestSender = new RequestSender(SyncRequestClient.create(properties.getProperty("apikey"), properties.getProperty("secretkey"), options));
 
         try {
             TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
             api.registerBot(new TradeBot(properties.getProperty("bottoken"),
                     properties.getProperty("botusername"),
-                    Long.parseLong(properties.getProperty("creatorid"))));
+                    Long.parseLong(properties.getProperty("creatorid")),
+                    requestSender));
         } catch (TelegramApiException ignored) {
 
         }
 
-        RequestOptions options = new RequestOptions();
-
-        SyncRequestClient syncRequestClient = SyncRequestClient.create(properties.getProperty("apikey"), properties.getProperty("secretkey"),
-                options);
-
-        WebhookReceiver.start("/" + properties.getProperty("context"), new AltcoinsHandler(new RequestSender(syncRequestClient)));
+        WebhookReceiver.start("/" + properties.getProperty("context"), new AltcoinsHandler(requestSender));
     }
 
     public static Properties readPropertiesFile(String fileName) {

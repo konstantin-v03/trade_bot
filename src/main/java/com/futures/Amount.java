@@ -1,7 +1,9 @@
 package com.futures;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+
+import static com.utils.Calculations.ONE_HUNDRED;
+import static com.utils.Calculations.percentage;
 
 public class Amount {
     public enum TYPE {
@@ -20,7 +22,7 @@ public class Amount {
                 type = TYPE.PERCENT;
                 this.amount = new BigDecimal(subString);
 
-                if (this.amount.compareTo(new BigDecimal(100)) > 0 || this.amount.compareTo(new BigDecimal(1)) < 0) {
+                if (this.amount.compareTo(ONE_HUNDRED) > 0 || this.amount.compareTo(BigDecimal.ONE) < 0) {
                     throw new IllegalArgumentException();
                 }
                 break;
@@ -47,7 +49,7 @@ public class Amount {
     }
 
     public static BigDecimal getAmountUSD(BigDecimal amountPercent, BigDecimal availableBalance) {
-        return availableBalance.multiply(amountPercent.divide(new BigDecimal(100), 1, RoundingMode.FLOOR));
+        return percentage(availableBalance, amountPercent);
     }
 
     @Override

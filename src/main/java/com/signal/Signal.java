@@ -7,6 +7,20 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Date;
 
+/*
+{
+  "ticket": "DOGEBUSD",
+  "exchange": "BINANCE",
+  "close": "40000",
+  "interval": "5",
+  "instant": "2019-08-27T09:56:00Z",
+  "indicator": {
+    "type": "PIFAGOR_ALTCOINS",
+    "action": "BUY"
+  }
+}
+ */
+
 public abstract class Signal {
     private final String ticket;
     private final String exchange;

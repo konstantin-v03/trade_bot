@@ -2,6 +2,8 @@ package com.log;
 
 import com.binance.client.model.trade.MyTrade;
 import com.binance.client.model.trade.Position;
+import com.utils.I18nSupport;
+import org.jetbrains.annotations.NonNls;
 import org.telegram.abilitybots.api.sender.SilentSender;
 
 import java.io.File;
@@ -13,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class TradeLogger {
+    @NonNls
     private static final String LOG_ORDER_DIR = "orders/";
     private static final String EXCEPTION_FILE_NAME = "exception.txt";
 
@@ -21,7 +24,7 @@ public class TradeLogger {
 
     static {
         if (!new File(LOG_ORDER_DIR).mkdir()) {
-            System.err.println("Orders directory was now created!");
+            System.err.println(I18nSupport.i18n_literals("order.dir.was.not.created"));
         }
     }
 
@@ -31,7 +34,7 @@ public class TradeLogger {
                     getFormatDate(),
                     position.getPositionSide(),
                     position.getEntryPrice()));
-            logTgBot(String.format("%s %s OPEN %s %s$", position.getPositionSide().equals("LONG") ? "\uD83D\uDCC8" : "\uD83D\uDCC9",
+            logTgBot(I18nSupport.i18n_literals("open.order", position.getPositionSide().equals("LONG") ? "\uD83D\uDCC8" : "\uD83D\uDCC9",
                     position.getSymbol(),
                     position.getPositionSide(),
                     position.getEntryPrice()));
@@ -47,7 +50,7 @@ public class TradeLogger {
                     myTrade.getPositionSide(),
                     myTrade.getPrice(),
                     myTrade.getRealizedPnl()));
-            logTgBot(String.format("❌ %s CLOSE %s %s$ \nProfit: %s$", myTrade.getSymbol(), myTrade.getPositionSide(), myTrade.getPrice(), myTrade.getRealizedPnl()));
+            logTgBot(I18nSupport.i18n_literals("close.order", myTrade.getSymbol(), myTrade.getPositionSide(), myTrade.getPrice(), myTrade.getRealizedPnl()));
         } catch (IOException ignored) {
 
         }
@@ -57,7 +60,7 @@ public class TradeLogger {
         try {
             logFile(EXCEPTION_FILE_NAME,
                     getFormatDate() + " " + exception);
-            logTgBot(String.format("⛔ Error occured: \"%s\"", exception));
+            logTgBot(I18nSupport.i18n_literals("error.occured", exception));
         } catch (IOException ignored) {
 
         }

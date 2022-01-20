@@ -10,6 +10,7 @@ import com.binance.client.model.market.PriceChangeTicker;
 import com.binance.client.model.trade.*;
 import com.futures.Amount;
 import com.futures.FilterType;
+import com.futures.TP_SL;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -45,24 +46,41 @@ public class RequestSender {
         return closePositionMarket(symbol, PositionSide.SHORT);
     }
 
-    public MyTrade getMyTrade(String symbol, Long orderId) {
-        List<MyTrade> myTrades = syncRequestClient.getAccountTrades(symbol, null, null, null, null)
-                .stream()
-                .filter(myTrade -> myTrade.getOrderId().equals(orderId))
-                .collect(Collectors.toList());
+    public synchronized TP_SL postTP_SLOrders(String symbol, PositionSide positionSide, BigDecimal takeProfitPercent, BigDecimal stopLossPercent) {
+        OrderSide orderSide = positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY;
+        PositionRisk positionRisk = getPositionRisk(syncRequestClient.getPositionRisk(), symbol, positionSide);
 
-        return myTrades.size() > 0 ? myTrades.get(0) : null;
-    }
+        TP_SL tp_sl = new TP_SL(positionSide, getLastPrice(symbol), takeProfitPercent, stopLossPercent);
 
-    public Position getPosition(String symbol, PositionSide positionSide) {
-        List<Position> positions = getOpenedPositions();
+        if (positionRisk != null) {
+            tp_sl.setStopLossOrder(syncRequestClient.postOrder(symbol,
+                    orderSide,
+                    positionSide,
+                    OrderType.STOP_MARKET,
+                    null,
+                    String.valueOf(Math.abs(positionRisk.getPositionAmt().longValue())),
+                    null,
+                    null,
+                    null,
+                    tp_sl.getStopLossPrice().toString(),
+                    null,
+                    NewOrderRespType.ACK));
 
-        positions = positions
-                .stream()
-                .filter(position -> position.getSymbol().equals(symbol) && position.getPositionSide().equals(positionSide.toString()))
-                .collect(Collectors.toList());
+            tp_sl.setTakeProfitOrder(syncRequestClient.postOrder(symbol,
+                    orderSide,
+                    positionSide,
+                    OrderType.TAKE_PROFIT_MARKET,
+                    null,
+                    String.valueOf(Math.abs(positionRisk.getPositionAmt().longValue())),
+                    null,
+                    null,
+                    null,
+                    tp_sl.getTakeProfitPrice().toString(),
+                    null,
+                    NewOrderRespType.ACK));
+        }
 
-        return positions.size() == 1 ? positions.get(0) : null;
+        return tp_sl;
     }
 
     public synchronized Long closePositionMarket(String symbol, PositionSide positionSide) {
@@ -125,7 +143,27 @@ public class RequestSender {
         return false;
     }
 
-    private BigDecimal getAvailableBalance(String asset) {
+    public MyTrade getMyTrade(String symbol, Long orderId) {
+        List<MyTrade> myTrades = syncRequestClient.getAccountTrades(symbol, null, null, null, null)
+                .stream()
+                .filter(myTrade -> myTrade.getOrderId().equals(orderId))
+                .collect(Collectors.toList());
+
+        return myTrades.size() > 0 ? myTrades.get(0) : null;
+    }
+
+    public Position getPosition(String symbol, PositionSide positionSide) {
+        List<Position> positions = getOpenedPositions();
+
+        positions = positions
+                .stream()
+                .filter(position -> position.getSymbol().equals(symbol) && position.getPositionSide().equals(positionSide.toString()))
+                .collect(Collectors.toList());
+
+        return positions.size() == 1 ? positions.get(0) : null;
+    }
+
+    public BigDecimal getAvailableBalance(String asset) {
         List<AccountBalance> accountBalances = syncRequestClient
                 .getBalance()
                 .stream()
@@ -135,7 +173,7 @@ public class RequestSender {
         return accountBalances.size() == 1 ? accountBalances.get(0).getWithdrawAvailable() : null;
     }
 
-    private BigDecimal getBalance(String asset) {
+    public BigDecimal getBalance(String asset) {
         List<AccountBalance> accountBalances = syncRequestClient
                 .getBalance()
                 .stream()
@@ -145,7 +183,7 @@ public class RequestSender {
         return accountBalances.size() == 1 ? accountBalances.get(0).getBalance() : null;
     }
 
-    private String getAssetBySymbol(String symbol) {
+    public String getAssetBySymbol(String symbol) {
         if (symbol.matches(".*BUSD")) {
             return "BUSD";
         } else if (symbol.matches(".*USDT")) {
@@ -155,14 +193,30 @@ public class RequestSender {
         }
     }
 
-    private List<Position> getOpenedPositions() {
+    public List<Order> getOpenOrders(String symbol){
+        return syncRequestClient
+                .getOpenOrders(symbol)
+                .stream()
+                .filter(order -> order.getSymbol().equals(symbol))
+                .collect(Collectors.toList());
+    }
+
+    public void cancelOrders(String symbol) {
+        List<Order> orders = getOpenOrders(symbol);
+
+        for (Order order : orders) {
+            syncRequestClient.cancelOrder(symbol, order.getOrderId(), null);
+        }
+    }
+
+    public List<Position> getOpenedPositions() {
         return syncRequestClient.getAccountInformation()
                 .getPositions()
                 .stream()
                 .filter(position -> new BigDecimal(position.getEntryPrice()).compareTo(BigDecimal.ZERO) != 0).collect(Collectors.toList());
     }
 
-    private ExchangeInfoEntry getExchangeInfo(String symbol) {
+    public ExchangeInfoEntry getExchangeInfo(String symbol) {
         List<ExchangeInfoEntry> exchangeInfoEntries = syncRequestClient.getExchangeInformation()
                 .getSymbols()
                 .stream()
@@ -172,13 +226,13 @@ public class RequestSender {
         return exchangeInfoEntries.size() == 1 ? exchangeInfoEntries.get(0) : null;
     }
 
-    private BigDecimal getLastPrice(String symbol) {
+    public BigDecimal getLastPrice(String symbol) {
         List<PriceChangeTicker> priceChangeTickers = syncRequestClient.get24hrTickerPriceChange(symbol);
 
         return priceChangeTickers != null && priceChangeTickers.size() == 1 ? priceChangeTickers.get(0).getLastPrice() : null;
     }
 
-    private PositionRisk getPositionRisk(List<PositionRisk> positionRisks, String symbol, PositionSide positionSide) {
+    public PositionRisk getPositionRisk(List<PositionRisk> positionRisks, String symbol, PositionSide positionSide) {
         positionRisks = positionRisks.stream()
                 .filter(positionRisk -> positionRisk.getSymbol().equals(symbol) && positionRisk.getPositionSide().equals(positionSide.toString()))
                 .collect(Collectors.toList());
@@ -186,7 +240,7 @@ public class RequestSender {
         return positionRisks.size() == 1 ? positionRisks.get(0) : null;
     }
 
-    private String getExchangeInfoFilterValue(List<List<Map<String, String>>> exchangeInfoEntryFilters,
+    public String getExchangeInfoFilterValue(List<List<Map<String, String>>> exchangeInfoEntryFilters,
                                               FilterType filterType,
                                               String key) {
         List<Map<String, String>> temp;
