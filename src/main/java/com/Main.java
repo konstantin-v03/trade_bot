@@ -4,7 +4,7 @@ import com.binance.client.RequestOptions;
 import com.binance.client.SyncRequestClient;
 import com.futures.dualside.RequestSender;
 import com.server.WebhookReceiver;
-import com.strategies.AltcoinsHandler;
+import com.strategies.MFI_BigGuyHandler;
 import com.tgbot.TradeBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -33,7 +33,7 @@ public class Main {
 
         }
 
-        WebhookReceiver.start("/" + properties.getProperty("context"), new AltcoinsHandler(requestSender));
+        WebhookReceiver.start("/" + properties.getProperty("context"), new MFI_BigGuyHandler(requestSender));
     }
 
     public static Properties readPropertiesFile(String fileName) {

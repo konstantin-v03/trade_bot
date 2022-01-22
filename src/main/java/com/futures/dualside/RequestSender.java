@@ -50,15 +50,17 @@ public class RequestSender {
         OrderSide orderSide = positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY;
         PositionRisk positionRisk = getPositionRisk(syncRequestClient.getPositionRisk(), symbol, positionSide);
 
-        TP_SL tp_sl = new TP_SL(positionSide, getLastPrice(symbol), takeProfitPercent, stopLossPercent);
+        TP_SL tp_sl = null;
 
         if (positionRisk != null) {
+            tp_sl = new TP_SL(positionSide, positionRisk.getEntryPrice(), takeProfitPercent, stopLossPercent);
+
             tp_sl.setStopLossOrder(syncRequestClient.postOrder(symbol,
                     orderSide,
                     positionSide,
                     OrderType.STOP_MARKET,
                     null,
-                    String.valueOf(Math.abs(positionRisk.getPositionAmt().longValue())),
+                    positionRisk.getPositionAmt().toString(),
                     null,
                     null,
                     null,
@@ -71,7 +73,7 @@ public class RequestSender {
                     positionSide,
                     OrderType.TAKE_PROFIT_MARKET,
                     null,
-                    String.valueOf(Math.abs(positionRisk.getPositionAmt().longValue())),
+                    positionRisk.getPositionAmt().toString(),
                     null,
                     null,
                     null,
@@ -91,7 +93,7 @@ public class RequestSender {
 
         if (positionRisk != null && positionRisk.getPositionAmt().compareTo(BigDecimal.ZERO) != 0) {
             order = syncRequestClient.postOrder(symbol, orderSide, positionSide, OrderType.MARKET, null,
-                    String.valueOf(Math.abs(positionRisk.getPositionAmt().longValue())), null, null, null, null, null, NewOrderRespType.ACK);
+                    positionRisk.getPositionAmt().toString(), null, null, null, null, null, NewOrderRespType.ACK);
         }
 
         return order != null ? order.getOrderId() : null;
@@ -201,12 +203,17 @@ public class RequestSender {
                 .collect(Collectors.toList());
     }
 
-    public void cancelOrders(String symbol) {
+    public int cancelOrders(String symbol) {
+        int count = 0;
         List<Order> orders = getOpenOrders(symbol);
 
         for (Order order : orders) {
-            syncRequestClient.cancelOrder(symbol, order.getOrderId(), null);
+            if (syncRequestClient.cancelOrder(symbol, order.getOrderId(), null) != null) {
+                count++;
+            }
         }
+
+        return count;
     }
 
     public List<Position> getOpenedPositions() {

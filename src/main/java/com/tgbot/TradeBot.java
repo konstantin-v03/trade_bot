@@ -85,7 +85,11 @@ public class TradeBot extends AbilityBot {
                             throw new IllegalArgumentException();
                         }
 
-                        if (takeProfitPercent < 0 || stopLossPercent < 0 || takeProfitPercent > 99 || stopLossPercent > 99) {
+                        if (takeProfitPercent < 0
+                                || stopLossPercent < 0
+                                || takeProfitPercent > 99
+                                || stopLossPercent > 99
+                                || leverage <= 0) {
                             throw new IllegalArgumentException();
                         }
                     } catch (IllegalArgumentException illegalArgumentException) {
@@ -112,6 +116,35 @@ public class TradeBot extends AbilityBot {
                     } else {
                         silent.send(I18nSupport.i18n_literals("position.not.open"), ctx.chatId());
                     }
+                })
+                .build();
+    }
+
+    public Ability closePosition() {
+        return Ability.builder()
+                .name(I18nSupport.i18n_literals("closepos"))
+                .info(I18nSupport.i18n_literals("closepos.info"))
+                .privacy(Privacy.CREATOR)
+                .locality(Locality.USER)
+                .input(2)
+                .action(ctx -> {
+                    PositionSide positionSide = null;
+                    boolean isOk = true;
+                    int count = 0;
+
+                    try {
+                        positionSide = PositionSide.valueOf(ctx.secondArg());
+                    } catch (IllegalArgumentException illegalArgumentException) {
+                        isOk = false;
+                    }
+
+                    if (isOk) {
+                        isOk = requestSender.closePositionMarket(ctx.firstArg(), positionSide) != null;
+                        count = requestSender.cancelOrders(ctx.firstArg());
+                    }
+
+                    silent.send(I18nSupport.i18n_literals(isOk ? "closepos.success" : "closepos.error"), ctx.chatId());
+                    silent.send(count != 0 ? I18nSupport.i18n_literals("closeorder.success", count) : I18nSupport.i18n_literals("closeorder.error"), ctx.chatId());
                 })
                 .build();
     }
