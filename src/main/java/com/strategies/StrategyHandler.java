@@ -18,7 +18,9 @@ public abstract class StrategyHandler implements HttpHandler {
     @Override
     public final void handle(HttpExchange httpExchange) {
         inputRequest = Utils.readAllFromInputStream(httpExchange.getRequestBody());
-        process();
+
+        new Thread(this::process).start();
+
         Utils.answerOkToHttpsRequest(httpExchange);
     }
 

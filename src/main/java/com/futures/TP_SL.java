@@ -25,11 +25,11 @@ public class TP_SL {
         BigDecimal stopLossPercentage = percentage(price, stopLossPercent);
 
         if (positionSide.equals(PositionSide.LONG)) {
-            takeProfitPrice = price.add(takeProfitPercentage);
-            stopLossPrice = price.subtract(stopLossPercentage);
+            takeProfitPrice = takeProfitPercentage == null ? null : price.add(takeProfitPercentage);
+            stopLossPrice = stopLossPercentage == null ? null : price.subtract(stopLossPercentage);
         } else if (positionSide.equals(PositionSide.SHORT)) {
-            takeProfitPrice = price.subtract(takeProfitPercentage);
-            stopLossPrice = price.add(stopLossPercentage);
+            takeProfitPrice = takeProfitPercentage == null ? null : price.subtract(takeProfitPercentage);
+            stopLossPrice = stopLossPercentage == null ? null : price.add(stopLossPercentage);
         } else {
             throw new IllegalArgumentException(I18nSupport.i18n_literals("illegal.position.side"));
         }
@@ -57,15 +57,5 @@ public class TP_SL {
 
     public void setStopLossOrder(Order stopLossOrder) {
         this.stopLossOrder = stopLossOrder;
-    }
-
-    @Override
-    public String toString() {
-        return "TP_SL{" +
-                "takeProfitPrice=" + takeProfitPrice +
-                ", stopLossPrice=" + stopLossPrice +
-                ", takeProfitOrder=" + takeProfitOrder +
-                ", stopLossOrder=" + stopLossOrder +
-                '}';
     }
 }

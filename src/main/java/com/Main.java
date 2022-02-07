@@ -1,7 +1,9 @@
 package com;
 
 import com.binance.client.RequestOptions;
+import com.binance.client.SubscriptionClient;
 import com.binance.client.SyncRequestClient;
+import com.binance.client.model.enums.CandlestickInterval;
 import com.futures.dualside.RequestSender;
 import com.server.WebhookReceiver;
 import com.strategies.MFI_BigGuyHandler;
@@ -14,26 +16,29 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Properties;
+import java.util.TimeZone;
 
 public class Main {
     public static void main(String[] args) throws GeneralSecurityException, IOException {
-        Properties properties = readPropertiesFile(args[0]);
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
+        System.getProperties().putAll(readPropertiesFile(args[0]));
 
         RequestOptions options = new RequestOptions();
 
-        RequestSender requestSender = new RequestSender(SyncRequestClient.create(properties.getProperty("apikey"), properties.getProperty("secretkey"), options));
+        RequestSender requestSender = new RequestSender(SyncRequestClient.create(System.getProperty("apikey"), System.getProperty("secretkey"), options));
 
         try {
             TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
-            api.registerBot(new TradeBot(properties.getProperty("bottoken"),
-                    properties.getProperty("botusername"),
-                    Long.parseLong(properties.getProperty("creatorid")),
+            api.registerBot(new TradeBot(System.getProperty("bottoken"),
+                    System.getProperty("botusername"),
+                    Long.parseLong(System.getProperty("creatorid")),
                     requestSender));
         } catch (TelegramApiException ignored) {
 
         }
 
-        WebhookReceiver.start("/" + properties.getProperty("context"), new MFI_BigGuyHandler(requestSender));
+        WebhookReceiver.start("/" + System.getProperty("context"), new MFI_BigGuyHandler(requestSender));
     }
 
     public static Properties readPropertiesFile(String fileName) {

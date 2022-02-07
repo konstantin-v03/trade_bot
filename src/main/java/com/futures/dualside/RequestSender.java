@@ -1,16 +1,15 @@
 package com.futures.dualside;
 
 import com.binance.client.SyncRequestClient;
-import com.binance.client.model.enums.NewOrderRespType;
-import com.binance.client.model.enums.OrderSide;
-import com.binance.client.model.enums.OrderType;
-import com.binance.client.model.enums.PositionSide;
+import com.binance.client.model.ResponseResult;
+import com.binance.client.model.enums.*;
 import com.binance.client.model.market.ExchangeInfoEntry;
-import com.binance.client.model.market.PriceChangeTicker;
+import com.binance.client.model.market.MarkPrice;
 import com.binance.client.model.trade.*;
 import com.futures.Amount;
 import com.futures.FilterType;
 import com.futures.TP_SL;
+import org.jetbrains.annotations.NonNls;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,84 +21,112 @@ import java.util.stream.Collectors;
 public class RequestSender {
     private final SyncRequestClient syncRequestClient;
 
-    public RequestSender(SyncRequestClient syncRequestClient) {
+    public RequestSender(@NonNls SyncRequestClient syncRequestClient) {
         this.syncRequestClient = syncRequestClient;
 
         if (!Boolean.parseBoolean(syncRequestClient.getPositionSide().getString("dualSidePosition"))) {
-            syncRequestClient.changePositionSide(true);
+            syncRequestClient.changePositionSide("true");
         }
     }
 
-    public boolean openLongPositionMarket(String symbol, MarginType marginType, Amount amount, int leverage) throws NullPointerException {
+    public Order openLongPositionMarket(String symbol, MarginType marginType, Amount amount, int leverage) throws NullPointerException {
         return openPositionMarket(symbol, OrderSide.BUY, marginType, PositionSide.LONG, amount, leverage);
     }
 
-    public boolean openShortPositionMarket(String symbol, MarginType marginType, Amount amount, int leverage) throws NullPointerException {
+    public Order openShortPositionMarket(String symbol, MarginType marginType, Amount amount, int leverage) throws NullPointerException {
         return openPositionMarket(symbol, OrderSide.SELL, marginType, PositionSide.SHORT, amount, leverage);
     }
 
-    public Long closeLongPositionMarket(String symbol) {
+    public Order closeLongPositionMarket(String symbol) {
         return closePositionMarket(symbol, PositionSide.LONG);
     }
 
-    public Long closeShortPositionMarket(String symbol) {
+    public Order closeShortPositionMarket(String symbol) {
         return closePositionMarket(symbol, PositionSide.SHORT);
     }
 
     public synchronized TP_SL postTP_SLOrders(String symbol, PositionSide positionSide, BigDecimal takeProfitPercent, BigDecimal stopLossPercent) {
         OrderSide orderSide = positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY;
-        PositionRisk positionRisk = getPositionRisk(syncRequestClient.getPositionRisk(), symbol, positionSide);
+        PositionRisk positionRisk = getPositionRisk(syncRequestClient.getPositionRisk(symbol), symbol, positionSide);
 
         TP_SL tp_sl = null;
 
         if (positionRisk != null) {
             tp_sl = new TP_SL(positionSide, positionRisk.getEntryPrice(), takeProfitPercent, stopLossPercent);
 
-            tp_sl.setStopLossOrder(syncRequestClient.postOrder(symbol,
-                    orderSide,
-                    positionSide,
-                    OrderType.STOP_MARKET,
-                    null,
-                    positionRisk.getPositionAmt().toString(),
-                    null,
-                    null,
-                    null,
-                    tp_sl.getStopLossPrice().toString(),
-                    null,
-                    NewOrderRespType.ACK));
+            if (stopLossPercent != null) {
+                tp_sl.setStopLossOrder(syncRequestClient.postOrder(symbol,
+                        orderSide,
+                        positionSide,
+                        OrderType.STOP_MARKET,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        tp_sl.getStopLossPrice().toString(),
+                        "true",
+                        null,
+                        null,
+                        null,
+                        null,
+                        NewOrderRespType.ACK));
+            }
 
-            tp_sl.setTakeProfitOrder(syncRequestClient.postOrder(symbol,
-                    orderSide,
-                    positionSide,
-                    OrderType.TAKE_PROFIT_MARKET,
-                    null,
-                    positionRisk.getPositionAmt().toString(),
-                    null,
-                    null,
-                    null,
-                    tp_sl.getTakeProfitPrice().toString(),
-                    null,
-                    NewOrderRespType.ACK));
+            if (takeProfitPercent != null) {
+                tp_sl.setTakeProfitOrder(syncRequestClient.postOrder(symbol,
+                        orderSide,
+                        positionSide,
+                        OrderType.TAKE_PROFIT_MARKET,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        tp_sl.getTakeProfitPrice().toString(),
+                        "true",
+                        null,
+                        null,
+                        null,
+                        null,
+                        NewOrderRespType.ACK));
+            }
         }
 
         return tp_sl;
     }
 
-    public synchronized Long closePositionMarket(String symbol, PositionSide positionSide) {
+    public synchronized Order closePositionMarket(String symbol, PositionSide positionSide) {
         OrderSide orderSide = positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY;
-        PositionRisk positionRisk = getPositionRisk(syncRequestClient.getPositionRisk(), symbol, positionSide);
+        PositionRisk positionRisk = getPositionRisk(syncRequestClient.getPositionRisk(symbol), symbol, positionSide);
 
         Order order = null;
 
         if (positionRisk != null && positionRisk.getPositionAmt().compareTo(BigDecimal.ZERO) != 0) {
-            order = syncRequestClient.postOrder(symbol, orderSide, positionSide, OrderType.MARKET, null,
-                    positionRisk.getPositionAmt().toString(), null, null, null, null, null, NewOrderRespType.ACK);
+            order =
+                    syncRequestClient.postOrder(
+                            symbol,
+                            orderSide,
+                            positionSide,
+                            OrderType.MARKET,
+                            null,
+                            positionRisk.getPositionAmt().toString(),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            NewOrderRespType.ACK);
         }
 
-        return order != null ? order.getOrderId() : null;
+        return order;
     }
 
-    public synchronized boolean openPositionMarket(String symbol, OrderSide orderSide, MarginType marginType, PositionSide positionSide, Amount amount, int leverage){
+    public synchronized Order openPositionMarket(String symbol, OrderSide orderSide, MarginType marginType, PositionSide positionSide, Amount amount, int leverage){
         ExchangeInfoEntry exchangeInfoEntry = getExchangeInfo(symbol);
 
         BigDecimal amountUSD = null;
@@ -114,7 +141,7 @@ public class RequestSender {
                 FilterType.MARKET_LOT_SIZE,
                 "stepSize"))).scale(), RoundingMode.FLOOR);
 
-        List<PositionRisk> positionRisks = syncRequestClient.getPositionRisk();
+        List<PositionRisk> positionRisks = syncRequestClient.getPositionRisk(symbol);
         PositionRisk positionRisk = getPositionRisk(positionRisks, symbol, positionSide);
 
         if (positionRisk != null && quantity.compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
@@ -131,18 +158,30 @@ public class RequestSender {
                 syncRequestClient.changeInitialLeverage(symbol, leverage);
             }
 
-            if ((positionRisk.getMarginType().equals("cross") && marginType.isIsolated()) ||
-                    (positionRisk.getMarginType().equals("isolated") && marginType.isCrossed()))  {
-                syncRequestClient.changeMarginType(symbol, marginType.toString());
+            if ((positionRisk.getMarginType().equals("cross") && marginType.equals(MarginType.ISOLATED)) ||
+                    (positionRisk.getMarginType().equals("isolated") && marginType.equals(MarginType.CROSSED)))  {
+                syncRequestClient.changeMarginType(symbol, marginType);
             }
 
-            syncRequestClient.postOrder(symbol, orderSide, positionSide, OrderType.MARKET, null,
-                    quantity.toString(), null, null, null, null, null, NewOrderRespType.ACK);
-
-            return true;
+            return syncRequestClient.postOrder(symbol,
+                    orderSide,
+                    positionSide,
+                    OrderType.MARKET,
+                    null,
+                    quantity.toString(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    NewOrderRespType.ACK);
         }
 
-        return false;
+        return null;
     }
 
     public MyTrade getMyTrade(String symbol, Long orderId) {
@@ -172,17 +211,7 @@ public class RequestSender {
                 .filter(accountBalance -> accountBalance.getAsset().equals(asset))
                 .collect(Collectors.toList());
 
-        return accountBalances.size() == 1 ? accountBalances.get(0).getWithdrawAvailable() : null;
-    }
-
-    public BigDecimal getBalance(String asset) {
-        List<AccountBalance> accountBalances = syncRequestClient
-                .getBalance()
-                .stream()
-                .filter(accountBalance -> accountBalance.getAsset().equals(asset))
-                .collect(Collectors.toList());
-
-        return accountBalances.size() == 1 ? accountBalances.get(0).getBalance() : null;
+        return accountBalances.size() == 1 ? accountBalances.get(0).getMaxWithdrawAmount() : null;
     }
 
     public String getAssetBySymbol(String symbol) {
@@ -195,25 +224,8 @@ public class RequestSender {
         }
     }
 
-    public List<Order> getOpenOrders(String symbol){
-        return syncRequestClient
-                .getOpenOrders(symbol)
-                .stream()
-                .filter(order -> order.getSymbol().equals(symbol))
-                .collect(Collectors.toList());
-    }
-
-    public int cancelOrders(String symbol) {
-        int count = 0;
-        List<Order> orders = getOpenOrders(symbol);
-
-        for (Order order : orders) {
-            if (syncRequestClient.cancelOrder(symbol, order.getOrderId(), null) != null) {
-                count++;
-            }
-        }
-
-        return count;
+    public ResponseResult cancelOrders(String symbol) {
+        return syncRequestClient.cancelAllOpenOrder(symbol);
     }
 
     public List<Position> getOpenedPositions() {
@@ -234,9 +246,9 @@ public class RequestSender {
     }
 
     public BigDecimal getLastPrice(String symbol) {
-        List<PriceChangeTicker> priceChangeTickers = syncRequestClient.get24hrTickerPriceChange(symbol);
+        List<MarkPrice> markPrices = syncRequestClient.getMarkPrice(symbol);
 
-        return priceChangeTickers != null && priceChangeTickers.size() == 1 ? priceChangeTickers.get(0).getLastPrice() : null;
+        return markPrices != null && markPrices.size() == 1 ? markPrices.get(0).getMarkPrice() : null;
     }
 
     public PositionRisk getPositionRisk(List<PositionRisk> positionRisks, String symbol, PositionSide positionSide) {

@@ -7,7 +7,7 @@ import org.json.JSONObject;
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class PIFAGOR_ALTCOINS_SIGNAL extends Signal {
+public final class PIFAGOR_ALTCOINS_SIGNAL extends Signal {
     public static final String TYPE = I18nSupport.i18n_literals("pifagor.altcoins");
 
     public enum Action {
@@ -16,13 +16,13 @@ public class PIFAGOR_ALTCOINS_SIGNAL extends Signal {
 
     private final PIFAGOR_ALTCOINS_SIGNAL.Action action;
 
-    public PIFAGOR_ALTCOINS_SIGNAL(String ticket, String exchange, BigDecimal close, Integer interval, String instant, PIFAGOR_ALTCOINS_SIGNAL.Action action) {
-        super(ticket, exchange, close, interval, instant);
+    public PIFAGOR_ALTCOINS_SIGNAL(String ticker, String exchange, BigDecimal close, Integer interval, String instant, PIFAGOR_ALTCOINS_SIGNAL.Action action) {
+        super(ticker, exchange, close, interval, instant);
         this.action = action;
     }
 
-    public PIFAGOR_ALTCOINS_SIGNAL(String ticket, String exchange, BigDecimal close, Integer interval, Date time, PIFAGOR_ALTCOINS_SIGNAL.Action action) {
-        super(ticket, exchange, close, interval, time);
+    public PIFAGOR_ALTCOINS_SIGNAL(String ticker, String exchange, BigDecimal close, Integer interval, Date time, PIFAGOR_ALTCOINS_SIGNAL.Action action) {
+        super(ticker, exchange, close, interval, time);
         this.action = action;
     }
 

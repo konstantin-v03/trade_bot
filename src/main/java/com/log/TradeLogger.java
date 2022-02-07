@@ -2,9 +2,10 @@ package com.log;
 
 import com.binance.client.model.trade.MyTrade;
 import com.binance.client.model.trade.Position;
+import com.futures.TP_SL;
+import com.tgbot.AsyncSender;
 import com.utils.I18nSupport;
 import org.jetbrains.annotations.NonNls;
-import org.telegram.abilitybots.api.sender.SilentSender;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -15,124 +16,49 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class TradeLogger {
-    @NonNls
-    private static final String LOG_ORDER_DIR = "orders/";
-    private static final String EXCEPTION_FILE_NAME = "exception.txt";
-
-    public static SilentSender silentSender = null;
+    public static AsyncSender asyncSender;
     public static Long chatId = null;
 
-    static {
-        if (!new File(LOG_ORDER_DIR).mkdir()) {
-            System.err.println(I18nSupport.i18n_literals("order.dir.was.not.created"));
-        }
+    public static void logOpenPosition(Position position) {
+        logTgBot(I18nSupport.i18n_literals("position.open", position.getPositionSide().equals("LONG") ? "\uD83D\uDCC8" : "\uD83D\uDCC9",
+                position.getSymbol(),
+                position.getPositionSide(),
+                position.getEntryPrice()));
     }
 
-    public static void logOpenOrder(Position position) {
-        try {
-            logFile(getLogOrderPath(position.getSymbol()), String.format("%s OPEN %s %s$",
-                    getFormatDate(),
-                    position.getPositionSide(),
-                    position.getEntryPrice()));
-            logTgBot(I18nSupport.i18n_literals("open.order", position.getPositionSide().equals("LONG") ? "\uD83D\uDCC8" : "\uD83D\uDCC9",
-                    position.getSymbol(),
-                    position.getPositionSide(),
-                    position.getEntryPrice()));
-        } catch (IOException ignored) {
-
-        }
+    public static void logClosePosition(MyTrade myTrade) {
+        logTgBot(myTrade != null ?
+                I18nSupport.i18n_literals("position.close", myTrade.getSymbol(), myTrade.getPositionSide(), myTrade.getPrice(), myTrade.getRealizedPnl()) :
+                I18nSupport.i18n_literals("position.not.close"));
     }
 
-    public static void logCloseOrder(MyTrade myTrade) {
-        try {
-            logFile(getLogOrderPath(myTrade.getSymbol()), String.format("%s CLOSE %s %s$ %s$",
-                    getFormatDate(),
-                    myTrade.getPositionSide(),
-                    myTrade.getPrice(),
-                    myTrade.getRealizedPnl()));
-            logTgBot(I18nSupport.i18n_literals("close.order", myTrade.getSymbol(), myTrade.getPositionSide(), myTrade.getPrice(), myTrade.getRealizedPnl()));
-        } catch (IOException ignored) {
+    public static void logTP_SLOrders(TP_SL tp_sl) {
+        boolean isPost = false;
 
+        if (tp_sl != null) {
+            if (tp_sl.getTakeProfitOrder() != null) {
+                logTgBot(I18nSupport.i18n_literals("post.take.profit", tp_sl.getTakeProfitOrder().getStopPrice()));
+                isPost = true;
+            }
+
+            if (tp_sl.getStopLossOrder() != null) {
+                logTgBot(I18nSupport.i18n_literals("post.stop.loss", tp_sl.getStopLossOrder().getStopPrice()));
+                isPost = true;
+            }
+        }
+
+        if (!isPost) {
+            logTgBot(I18nSupport.i18n_literals("tp.sl.not.posted"));
         }
     }
 
     public static void logException(Exception exception) {
-        try {
-            logFile(EXCEPTION_FILE_NAME,
-                    getFormatDate() + " " + exception);
-            logTgBot(I18nSupport.i18n_literals("error.occured", exception));
-        } catch (IOException ignored) {
-
-        }
-    }
-
-    public static File getExceptionFile() {
-        return new File(EXCEPTION_FILE_NAME);
-    }
-
-    public static File getOrderLogFile(String symbol) {
-        return new File(getLogOrderPath(symbol));
-    }
-
-    public static void logFile(String fileName, String log) throws IOException {
-        File file = new File(fileName);
-
-        if (!file.exists()) {
-            if (!file.createNewFile()) {
-                throw new IOException();
-            }
-        }
-
-        FileWriter fileWriter = new FileWriter(file, true);
-        fileWriter.append(log).append("\n");
-        fileWriter.close();
+        logTgBot(I18nSupport.i18n_literals("error.occured", exception));
     }
 
     public static void logTgBot(String log) {
-        if (silentSender != null && chatId != null) {
-            silentSender.send(log, chatId);
+        if (asyncSender != null && chatId != null) {
+            asyncSender.sendTextMsgAsync(log, chatId, "HTML");
         }
-    }
-
-    public static BigDecimal getTotalProfit(String symbol) {
-        List<List<String>> lines;
-        BigDecimal totalProfit = new BigDecimal(BigInteger.ZERO);
-
-        try {
-            Scanner scanner = new Scanner(TradeLogger.getOrderLogFile(symbol));
-
-            lines = new ArrayList<>();
-
-            while (scanner.hasNextLine()) {
-                lines.add(new ArrayList<>(Arrays.asList(scanner.nextLine().split(" "))));
-            }
-
-            scanner.close();
-        } catch (IOException ioException) {
-            return null;
-        }
-
-        String word;
-
-        try {
-            for (List<String> line : lines) {
-                if (line.size() > 5 && line.get(2).equals("CLOSE")) {
-                    word = line.get(5);
-                    totalProfit = totalProfit.add(new BigDecimal(word.substring(0, word.length() - 1)));
-                }
-            }
-        } catch (IllegalArgumentException illegalArgumentException) {
-            return null;
-        }
-
-        return totalProfit;
-    }
-
-    private static String getLogOrderPath(String symbol) {
-        return LOG_ORDER_DIR + symbol + ".txt";
-    }
-
-    private static String getFormatDate() {
-        return new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date());
     }
 }

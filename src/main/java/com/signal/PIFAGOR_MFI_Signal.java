@@ -7,7 +7,7 @@ import org.json.JSONObject;
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class PIFAGOR_MFI_Signal extends Signal {
+public final class PIFAGOR_MFI_Signal extends Signal {
     public static final String TYPE = I18nSupport.i18n_literals("pifagor.mfi");
 
     public enum Action {
@@ -16,13 +16,13 @@ public class PIFAGOR_MFI_Signal extends Signal {
 
     private final Action action;
 
-    public PIFAGOR_MFI_Signal(String ticket, String exchange, BigDecimal close, Integer interval, String instant, PIFAGOR_MFI_Signal.Action action) {
-        super(ticket, exchange, close, interval, instant);
+    public PIFAGOR_MFI_Signal(String ticker, String exchange, BigDecimal close, Integer interval, String instant, PIFAGOR_MFI_Signal.Action action) {
+        super(ticker, exchange, close, interval, instant);
         this.action = action;
     }
 
-    public PIFAGOR_MFI_Signal(String ticket, String exchange, BigDecimal close, Integer interval, Date time, PIFAGOR_MFI_Signal.Action action) {
-        super(ticket, exchange, close, interval, time);
+    public PIFAGOR_MFI_Signal(String ticker, String exchange, BigDecimal close, Integer interval, Date time, PIFAGOR_MFI_Signal.Action action) {
+        super(ticker, exchange, close, interval, time);
         this.action = action;
     }
 

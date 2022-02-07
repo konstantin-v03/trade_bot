@@ -7,37 +7,23 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Date;
 
-/*
-{
-  "ticket": "DOGEBUSD",
-  "exchange": "BINANCE",
-  "close": "40000",
-  "interval": "5",
-  "instant": "2019-08-27T09:56:00Z",
-  "indicator": {
-    "type": "PIFAGOR_ALTCOINS",
-    "action": "BUY"
-  }
-}
- */
-
 public abstract class Signal {
-    private final String ticket;
+    private final String ticker;
     private final String exchange;
     private final BigDecimal close;
     private final Integer interval;
     private final Date time;
 
-    public Signal(String ticket, String exchange, BigDecimal close, Integer interval, String instant) {
-        this.ticket = ticket;
+    public Signal(String ticker, String exchange, BigDecimal close, Integer interval, String instant) {
+        this.ticker = ticker;
         this.exchange = exchange;
         this.close = close;
         this.interval = interval;
         this.time = Date.from(Instant.parse(instant));
     }
 
-    public Signal(String ticket, String exchange, BigDecimal close, Integer interval, Date time) {
-        this.ticket = ticket;
+    public Signal(String ticker, String exchange, BigDecimal close, Integer interval, Date time) {
+        this.ticker = ticker;
         this.exchange = exchange;
         this.close = close;
         this.interval = interval;
@@ -45,15 +31,15 @@ public abstract class Signal {
     }
 
     public Signal(JSONObject jsonObject) throws JSONException, IllegalArgumentException {
-        ticket = jsonObject.getString(I18nSupport.i18n_literals("ticket"));
+        ticker = jsonObject.getString(I18nSupport.i18n_literals("ticker"));
         exchange = jsonObject.getString(I18nSupport.i18n_literals("exchange"));
         close = jsonObject.getBigDecimal(I18nSupport.i18n_literals("close"));
         interval = jsonObject.getInt(I18nSupport.i18n_literals("interval"));
         time = Date.from(Instant.parse(jsonObject.getString(I18nSupport.i18n_literals("instant"))));
     }
 
-    public String getTicket() {
-        return ticket;
+    public String getTicker() {
+        return ticker;
     }
 
     public String getExchange() {

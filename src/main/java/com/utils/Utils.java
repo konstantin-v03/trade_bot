@@ -1,6 +1,7 @@
 package com.utils;
 
 import java.io.*;
+import java.math.BigDecimal;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
@@ -32,5 +33,12 @@ public class Utils {
         } catch (IOException ignored) {
 
         }
+    }
+
+    public static BigDecimal percentToBigDecimal(String string) throws IllegalArgumentException {
+        String subString = string.substring(0, string.length() - 1);
+        char lastChr = string.charAt(string.length() - 1);
+
+        return lastChr == '%' ? new BigDecimal(subString) : null;
     }
 }
