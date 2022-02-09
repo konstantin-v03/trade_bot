@@ -20,9 +20,9 @@ public class TP_SL {
         this.stopLossPrice = stopLossPrice;
     }
 
-    public TP_SL(PositionSide positionSide, BigDecimal price, BigDecimal takeProfitPercent, BigDecimal stopLossPercent) throws IllegalArgumentException{
-        BigDecimal takeProfitPercentage = percentage(price, takeProfitPercent);
-        BigDecimal stopLossPercentage = percentage(price, stopLossPercent);
+    public TP_SL(PositionSide positionSide, BigDecimal price, int takeProfitPercent, int stopLossPercent) throws IllegalArgumentException{
+        BigDecimal takeProfitPercentage = percentage(price, new BigDecimal(takeProfitPercent));
+        BigDecimal stopLossPercentage = percentage(price, new BigDecimal(stopLossPercent));
 
         if (positionSide.equals(PositionSide.LONG)) {
             takeProfitPrice = takeProfitPercentage == null ? null : price.add(takeProfitPercentage);

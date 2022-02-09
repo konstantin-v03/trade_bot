@@ -1,28 +1,16 @@
 package com.strategies;
 
 import com.futures.dualside.RequestSender;
+import org.json.JSONObject;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.utils.Utils;
-
-public abstract class StrategyHandler implements HttpHandler {
+public abstract class StrategyHandler {
     protected final RequestSender requestSender;
+    protected final StrategyProps strategyProps;
 
-    protected String inputRequest;
-
-    public StrategyHandler(RequestSender requestSender) {
+    public StrategyHandler(RequestSender requestSender, StrategyProps strategyProps) {
         this.requestSender = requestSender;
+        this.strategyProps = strategyProps;
     }
 
-    @Override
-    public final void handle(HttpExchange httpExchange) {
-        inputRequest = Utils.readAllFromInputStream(httpExchange.getRequestBody());
-
-        new Thread(this::process).start();
-
-        Utils.answerOkToHttpsRequest(httpExchange);
-    }
-
-    public abstract void process();
+    public abstract void process(JSONObject inputSignal);
 }

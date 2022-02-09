@@ -45,7 +45,7 @@ public class RequestSender {
         return closePositionMarket(symbol, PositionSide.SHORT);
     }
 
-    public synchronized TP_SL postTP_SLOrders(String symbol, PositionSide positionSide, BigDecimal takeProfitPercent, BigDecimal stopLossPercent) {
+    public synchronized TP_SL postTP_SLOrders(String symbol, PositionSide positionSide, int takeProfitPercent, int stopLossPercent) {
         OrderSide orderSide = positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY;
         PositionRisk positionRisk = getPositionRisk(syncRequestClient.getPositionRisk(symbol), symbol, positionSide);
 
@@ -54,7 +54,7 @@ public class RequestSender {
         if (positionRisk != null) {
             tp_sl = new TP_SL(positionSide, positionRisk.getEntryPrice(), takeProfitPercent, stopLossPercent);
 
-            if (stopLossPercent != null) {
+            if (stopLossPercent != 0) {
                 tp_sl.setStopLossOrder(syncRequestClient.postOrder(symbol,
                         orderSide,
                         positionSide,
@@ -73,7 +73,7 @@ public class RequestSender {
                         NewOrderRespType.ACK));
             }
 
-            if (takeProfitPercent != null) {
+            if (takeProfitPercent != 0) {
                 tp_sl.setTakeProfitOrder(syncRequestClient.postOrder(symbol,
                         orderSide,
                         positionSide,

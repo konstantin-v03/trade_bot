@@ -16,74 +16,53 @@ import org.json.JSONObject;
 import java.math.BigDecimal;
 import java.util.*;
 
+import static com.utils.Utils.getCandlestickIndex;
 import static com.utils.Utils.percentToBigDecimal;
 
 public class MFI_BigGuyHandler extends StrategyHandler {
-    private final String TICKER;
-    private final int INTERVAL;
-    private final BigDecimal TAKE_PROFIT;
-    private final BigDecimal STOP_LOSS;
-    private final Amount AMOUNT;
-    private final int LEVERAGE;
+    public static final String NAME = "PIFAGOR_MFI_BIG_GUY";
 
     private PIFAGOR_MFI_Signal pifagorMfiSignal;
     private PIFAGOR_KHALIFA_Signal pifagorKhalifaSignal;
 
-    public MFI_BigGuyHandler(RequestSender requestSender) throws IllegalArgumentException {
-        super(requestSender);
-        TICKER = System.getProperty("ticker");
-        INTERVAL = Integer.parseInt(System.getProperty("interval"));
-        TAKE_PROFIT = percentToBigDecimal(System.getProperty("takeprofit"));
-        STOP_LOSS = percentToBigDecimal(System.getProperty("stoploss"));
-        AMOUNT = new Amount(System.getProperty("amount"));
-        LEVERAGE = Integer.parseInt(System.getProperty("leverage"));
+    public MFI_BigGuyHandler(RequestSender requestSender, StrategyProps strategyProps) throws IllegalArgumentException {
+        super(requestSender, strategyProps);
     }
 
     @Override
-    public synchronized void process() {
-        int currIndex = getCandlestickIndex(new Date(), INTERVAL);
+    public synchronized void process(JSONObject inputSignal) {
+        int currIndex = getCandlestickIndex(new Date(), strategyProps.getInterval());
 
         try {
-            JSONObject jsonObject = new JSONObject(inputRequest);
-
-            Class<?> signalClass = Signal.getSignalClass(jsonObject);
+            Class<?> signalClass = Signal.getSignalClass(inputSignal);
 
             if (signalClass == PIFAGOR_MFI_Signal.class) {
-                pifagorMfiSignal = new PIFAGOR_MFI_Signal(jsonObject);
+                pifagorMfiSignal = new PIFAGOR_MFI_Signal(inputSignal);
                 TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.signal", pifagorMfiSignal.getAction().toString(), pifagorMfiSignal.getClose()));
             } else if (signalClass == PIFAGOR_KHALIFA_Signal.class) {
-                pifagorKhalifaSignal = new PIFAGOR_KHALIFA_Signal(jsonObject);
+                pifagorKhalifaSignal = new PIFAGOR_KHALIFA_Signal(inputSignal);
                 TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.khalifa.signal.floor", pifagorKhalifaSignal.getFloor(), pifagorKhalifaSignal.getClose()));
             } else {
                 throw new JSONException(I18nSupport.i18n_literals("unsupported.signal.exception"));
             }
 
             if (pifagorKhalifaSignal != null
-                    && pifagorKhalifaSignal.getTicker().equals(TICKER)
-                    && pifagorKhalifaSignal.getInterval() == INTERVAL
+                    && pifagorKhalifaSignal.getTicker().equals(strategyProps.getTicker())
+                    && pifagorKhalifaSignal.getInterval() == strategyProps.getInterval()
                     && pifagorKhalifaSignal.getFloor() == 3
-                    && currIndex == getCandlestickIndex(pifagorKhalifaSignal.getTime(), INTERVAL)
+                    && currIndex == getCandlestickIndex(pifagorKhalifaSignal.getTime(), strategyProps.getInterval())
                     && pifagorMfiSignal != null
-                    && pifagorMfiSignal.getTicker().equals(TICKER)
-                    && pifagorMfiSignal.getInterval() == INTERVAL
+                    && pifagorMfiSignal.getTicker().equals(strategyProps.getTicker())
+                    && pifagorMfiSignal.getInterval() == strategyProps.getInterval()
                     && pifagorMfiSignal.getAction().equals(PIFAGOR_MFI_Signal.Action.STRONG_BUY)
-                    && currIndex == getCandlestickIndex(pifagorMfiSignal.getTime(), INTERVAL)
-                    && requestSender.getPosition(TICKER, PositionSide.LONG) == null) {
-                requestSender.openLongPositionMarket(TICKER, MarginType.ISOLATED, AMOUNT, LEVERAGE);
-                TradeLogger.logOpenPosition(requestSender.getPosition(TICKER, PositionSide.LONG));
-                TradeLogger.logTP_SLOrders(requestSender.postTP_SLOrders(TICKER, PositionSide.LONG, TAKE_PROFIT, STOP_LOSS));
+                    && currIndex == getCandlestickIndex(pifagorMfiSignal.getTime(), strategyProps.getInterval())
+                    && requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG) == null) {
+                requestSender.openLongPositionMarket(strategyProps.getTicker(), MarginType.ISOLATED, strategyProps.getAmount(), strategyProps.getLeverage());
+                TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG));
+                TradeLogger.logTP_SLOrders(requestSender.postTP_SLOrders(strategyProps.getTicker(), PositionSide.LONG, strategyProps.getTakeProfit(), strategyProps.getStopLoss()));
             }
         } catch (JSONException|IllegalArgumentException exception) {
             TradeLogger.logException(exception);
         }
-    }
-
-    private static int getCandlestickIndex(Date date, int interval) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-
-        return (calendar.get(Calendar.HOUR_OF_DAY) *
-                DateUtils.MINUTES_IN_HOUR +
-                calendar.get(Calendar.MINUTE)) / interval;
     }
 }
