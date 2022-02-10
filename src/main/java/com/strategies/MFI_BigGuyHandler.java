@@ -39,9 +39,11 @@ public class MFI_BigGuyHandler extends StrategyHandler {
             if (signalClass == PIFAGOR_MFI_Signal.class) {
                 pifagorMfiSignal = new PIFAGOR_MFI_Signal(inputSignal);
                 TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.signal", pifagorMfiSignal.getAction().toString(), pifagorMfiSignal.getClose()));
+                TradeLogger.logTgBot("Current index: " + currIndex + "\n" + pifagorMfiSignal.toString());
             } else if (signalClass == PIFAGOR_KHALIFA_Signal.class) {
                 pifagorKhalifaSignal = new PIFAGOR_KHALIFA_Signal(inputSignal);
                 TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.khalifa.signal.floor", pifagorKhalifaSignal.getFloor(), pifagorKhalifaSignal.getClose()));
+                TradeLogger.logTgBot("Current index: " + currIndex + "\n" + pifagorKhalifaSignal.toString());
             } else {
                 throw new JSONException(I18nSupport.i18n_literals("unsupported.signal.exception"));
             }
@@ -50,12 +52,12 @@ public class MFI_BigGuyHandler extends StrategyHandler {
                     && pifagorKhalifaSignal.getTicker().equals(strategyProps.getTicker())
                     && pifagorKhalifaSignal.getInterval() == strategyProps.getInterval()
                     && pifagorKhalifaSignal.getFloor() == 3
-                    && currIndex == getCandlestickIndex(pifagorKhalifaSignal.getTime(), strategyProps.getInterval())
+                    && currIndex - 1 == getCandlestickIndex(pifagorKhalifaSignal.getTime(), strategyProps.getInterval())
                     && pifagorMfiSignal != null
                     && pifagorMfiSignal.getTicker().equals(strategyProps.getTicker())
                     && pifagorMfiSignal.getInterval() == strategyProps.getInterval()
                     && pifagorMfiSignal.getAction().equals(PIFAGOR_MFI_Signal.Action.STRONG_BUY)
-                    && currIndex == getCandlestickIndex(pifagorMfiSignal.getTime(), strategyProps.getInterval())
+                    && currIndex - 1 == getCandlestickIndex(pifagorMfiSignal.getTime(), strategyProps.getInterval())
                     && requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG) == null) {
                 requestSender.openLongPositionMarket(strategyProps.getTicker(), MarginType.ISOLATED, strategyProps.getAmount(), strategyProps.getLeverage());
                 TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG));

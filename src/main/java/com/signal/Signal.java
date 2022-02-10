@@ -1,6 +1,7 @@
 package com.signal;
 
 import com.utils.I18nSupport;
+import com.utils.Utils;
 import org.json.*;
 
 import java.math.BigDecimal;
@@ -70,5 +71,17 @@ public abstract class Signal {
         } else {
             throw new JSONException(I18nSupport.i18n_literals("unsupported.signal.exception"));
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Signal{" +
+                "ticker='" + ticker + '\'' +
+                ", exchange='" + exchange + '\'' +
+                ", close=" + close +
+                ", interval=" + interval +
+                ", time=" + time +
+                ", candlestick index=" + Utils.getCandlestickIndex(time, interval) +
+                '}';
     }
 }

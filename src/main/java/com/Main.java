@@ -13,7 +13,6 @@ import static com.utils.Utils.readPropertiesFile;
 public class Main {
     public static void main(String[] args) {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-
         Properties properties = readPropertiesFile(args[0]);
 
         try {

@@ -34,4 +34,11 @@ public final class PIFAGOR_MFI_Signal extends Signal {
     public PIFAGOR_MFI_Signal.Action getAction() {
         return action;
     }
+
+    @Override
+    public String toString() {
+        return "PIFAGOR_MFI_Signal{" +
+                "action=" + action +
+                "} " + super.toString();
+    }
 }

@@ -30,4 +30,11 @@ public final class PIFAGOR_KHALIFA_Signal extends Signal {
     public int getFloor() {
         return floor;
     }
+
+    @Override
+    public String toString() {
+        return "PIFAGOR_KHALIFA_Signal{" +
+                "floor=" + floor +
+                "} " + super.toString();
+    }
 }

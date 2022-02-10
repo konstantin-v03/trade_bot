@@ -34,4 +34,12 @@ public final class PIFAGOR_ALTCOINS_SIGNAL extends Signal {
     public PIFAGOR_ALTCOINS_SIGNAL.Action getAction() {
         return action;
     }
+
+    @Override
+    public String toString() {
+        return "PIFAGOR_ALTCOINS_SIGNAL{" +
+                "action=" + action +
+                "} " + super.toString();
+    }
+
 }
