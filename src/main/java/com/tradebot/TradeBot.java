@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TradeBot implements HttpHandler {
-    private final RequestSender requestSender;
 
     public final Map<String, StrategyHandler> enabledStrategies;
 
@@ -33,10 +32,12 @@ public class TradeBot implements HttpHandler {
                     String tgBotToken,
                     String tgBotUsername,
                     long tgBotCreatorId) throws TelegramApiException, GeneralSecurityException, IOException {
-        requestSender = new RequestSender(SyncRequestClient.create(binanceApiKey, binanceSecretKey));
-
         TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
-        api.registerBot(new TelegramTradeBot(tgBotToken, tgBotUsername, tgBotCreatorId, requestSender, this));
+        api.registerBot(new TelegramTradeBot(tgBotToken,
+                tgBotUsername,
+                tgBotCreatorId,
+                new RequestSender(SyncRequestClient.create(binanceApiKey, binanceSecretKey)),
+                this));
         enabledStrategies = new ConcurrentHashMap<>();
 
         WebhookReceiver.start("/" + webhookRequestContext, this);

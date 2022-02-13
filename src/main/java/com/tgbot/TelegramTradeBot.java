@@ -11,17 +11,12 @@ import com.strategies.MFI_BigGuyHandler;
 import com.strategies.StrategyProps;
 import com.tradebot.TradeBot;
 import com.utils.I18nSupport;
-import org.jetbrains.annotations.NonNls;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.Ability;
 import org.telegram.abilitybots.api.objects.Locality;
 import org.telegram.abilitybots.api.objects.Privacy;
 import org.telegram.abilitybots.api.toggle.CustomToggle;
-import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.math.BigDecimal;
 import java.util.stream.Collectors;
 
 public class TelegramTradeBot extends AbilityBot {
@@ -187,9 +182,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(0)
-                .action(ctx -> {
-                    TradeLogger.logTgBot(tradeBot.enabledStrategies.values().stream().map(object -> object.getClass().getCanonicalName()).collect(Collectors.joining("\n")));
-                })
+                .action(ctx -> TradeLogger.logTgBot(tradeBot.enabledStrategies.values().stream().map(object -> object.getClass().getCanonicalName()).collect(Collectors.joining("\n"))))
                 .build();
     }
 }

@@ -5,15 +5,6 @@ import com.binance.client.model.trade.Position;
 import com.futures.TP_SL;
 import com.tgbot.AsyncSender;
 import com.utils.I18nSupport;
-import org.jetbrains.annotations.NonNls;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 public class TradeLogger {
     public static AsyncSender asyncSender;
