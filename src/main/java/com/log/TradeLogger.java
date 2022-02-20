@@ -11,16 +11,16 @@ public class TradeLogger {
     public static Long chatId = null;
 
     public static void logOpenPosition(Position position) {
-        logTgBot(I18nSupport.i18n_literals("position.open", position.getPositionSide().equals("LONG") ? "\uD83D\uDCC8" : "\uD83D\uDCC9",
+        logTgBot(position != null ? I18nSupport.i18n_literals("position.open", position.getPositionSide().equals("LONG") ? "\uD83D\uDCC8" : "\uD83D\uDCC9",
                 position.getSymbol(),
                 position.getPositionSide(),
-                position.getEntryPrice()));
+                position.getEntryPrice()) : I18nSupport.i18n_literals("position.not.open", "Position = null!"));
     }
 
     public static void logClosePosition(MyTrade myTrade) {
         logTgBot(myTrade != null ?
                 I18nSupport.i18n_literals("position.close", myTrade.getSymbol(), myTrade.getPositionSide(), myTrade.getPrice(), myTrade.getRealizedPnl()) :
-                I18nSupport.i18n_literals("position.not.close"));
+                I18nSupport.i18n_literals("position.not.close", "MyTrade = null!"));
     }
 
     public static void logTP_SLOrders(TP_SL tp_sl) {

@@ -9,14 +9,16 @@ public class StrategyProps {
     private final int interval;
     private final int takeProfit;
     private final int stopLoss;
+    private final boolean debugMode;
 
-    public StrategyProps(String ticker, Amount amount, int leverage, int interval, int takeProfit, int stopLoss) {
+    public StrategyProps(String ticker, Amount amount, int leverage, int interval, int takeProfit, int stopLoss, boolean debugMode) {
         this.ticker = ticker;
         this.amount = amount;
         this.leverage = leverage;
         this.interval = interval;
         this.takeProfit = takeProfit;
         this.stopLoss = stopLoss;
+        this.debugMode = debugMode;
     }
 
     public String getTicker() {
@@ -41,5 +43,9 @@ public class StrategyProps {
 
     public int getStopLoss() {
         return stopLoss;
+    }
+
+    public boolean isDebugMode() {
+        return debugMode;
     }
 }

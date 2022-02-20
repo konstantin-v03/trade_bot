@@ -4,7 +4,6 @@ import com.binance.client.model.enums.MarginType;
 import com.binance.client.model.enums.PositionSide;
 import com.binance.client.model.trade.Order;
 import com.futures.Amount;
-import com.futures.TP_SL;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
 import com.strategies.MFI_BigGuyHandler;
@@ -59,6 +58,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .action(ctx -> {
                     Amount amount = null;
                     PositionSide positionSide = null;
+
                     int leverage = 0;
                     int takeProfitPercent = 0;
                     int stopLossPercent = 0;
@@ -76,27 +76,19 @@ public class TelegramTradeBot extends AbilityBot {
                             throw new IllegalArgumentException();
                         }
                     } catch (IllegalArgumentException illegalArgumentException) {
-                        isOk = false;
+                        TradeLogger.logTgBot(I18nSupport.i18n_literals("position.not.open",
+                                illegalArgumentException.getMessage()));
+                        return;
                     }
 
-                    TP_SL tp_sl = null;
-
-                    if (isOk) {
-                        if (positionSide.equals(PositionSide.LONG)) {
-                            requestSender.openLongPositionMarket(ctx.firstArg(), MarginType.ISOLATED, amount, leverage);
-                        } else {
-                            requestSender.openShortPositionMarket(ctx.firstArg(), MarginType.ISOLATED, amount, leverage);
-                        }
-
-                        tp_sl = requestSender.postTP_SLOrders(ctx.firstArg(), positionSide, takeProfitPercent, stopLossPercent);
-                    }
-
-                    if (isOk) {
-                        TradeLogger.logOpenPosition(requestSender.getPosition(ctx.firstArg(), positionSide));
-                        TradeLogger.logTP_SLOrders(tp_sl);
+                    if (positionSide.equals(PositionSide.LONG)) {
+                        requestSender.openLongPositionMarket(ctx.firstArg(), MarginType.ISOLATED, amount, leverage);
                     } else {
-                        TradeLogger.logTgBot(I18nSupport.i18n_literals("position.not.open"));
+                        requestSender.openShortPositionMarket(ctx.firstArg(), MarginType.ISOLATED, amount, leverage);
                     }
+
+                    TradeLogger.logOpenPosition(requestSender.getPosition(ctx.firstArg(), positionSide));
+                    TradeLogger.logTP_SLOrders(requestSender.postTP_SLOrders(ctx.firstArg(), positionSide, takeProfitPercent, stopLossPercent));
                 })
                 .build();
     }
@@ -136,7 +128,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .info(I18nSupport.i18n_literals("enable.strategy.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
-                .input(7)
+                .input(8)
                 .action(ctx -> {
                     try {
                         if (ctx.firstArg().equals(MFI_BigGuyHandler.NAME)) {
@@ -146,7 +138,8 @@ public class TelegramTradeBot extends AbilityBot {
                                             Integer.parseInt(ctx.arguments()[3]),
                                             Integer.parseInt(ctx.arguments()[4]),
                                             Integer.parseInt(ctx.arguments()[5]),
-                                            Integer.parseInt(ctx.arguments()[6]))));
+                                            Integer.parseInt(ctx.arguments()[6]),
+                                            Boolean.parseBoolean(ctx.arguments()[7]))));
                             TradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.enabled"));
                         } else {
                             throw new IllegalArgumentException("Strategy is not supported!");

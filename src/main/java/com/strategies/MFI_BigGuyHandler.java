@@ -36,9 +36,21 @@ public class MFI_BigGuyHandler extends StrategyHandler {
             if (signalClass == PIFAGOR_MFI_Signal.class) {
                 pifagorMfiSignal = new PIFAGOR_MFI_Signal(inputSignal);
                 TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.signal", pifagorMfiSignal.getAction().toString(), pifagorMfiSignal.getClose()));
+
+                if (strategyProps.isDebugMode()) {
+                    TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.big.guy.debug",
+                            currIndex,
+                            pifagorMfiSignal.toString()));
+                }
             } else if (signalClass == PIFAGOR_KHALIFA_Signal.class) {
                 pifagorKhalifaSignal = new PIFAGOR_KHALIFA_Signal(inputSignal);
                 TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.khalifa.signal.floor", pifagorKhalifaSignal.getFloor(), pifagorKhalifaSignal.getClose()));
+
+                if (strategyProps.isDebugMode()) {
+                    TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.big.guy.debug",
+                            currIndex,
+                            pifagorKhalifaSignal.toString()));
+                }
             } else {
                 throw new JSONException(I18nSupport.i18n_literals("unsupported.signal.exception"));
             }
@@ -57,6 +69,7 @@ public class MFI_BigGuyHandler extends StrategyHandler {
 
                 if (position == null) {
                     requestSender.openLongPositionMarket(strategyProps.getTicker(), MarginType.ISOLATED, strategyProps.getAmount(), strategyProps.getLeverage());
+                    requestSender.cancelOrders(strategyProps.getTicker());
                     TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG));
                     TradeLogger.logTP_SLOrders(requestSender.postTP_SLOrders(strategyProps.getTicker(), PositionSide.LONG, strategyProps.getTakeProfit(), strategyProps.getStopLoss()));
                 } else {
