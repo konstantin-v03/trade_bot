@@ -56,13 +56,12 @@ public class TelegramTradeBot extends AbilityBot {
                 .locality(Locality.USER)
                 .input(6)
                 .action(ctx -> {
-                    Amount amount = null;
-                    PositionSide positionSide = null;
+                    Amount amount;
+                    PositionSide positionSide;
 
-                    int leverage = 0;
-                    int takeProfitPercent = 0;
-                    int stopLossPercent = 0;
-                    boolean isOk = true;
+                    int leverage;
+                    int takeProfitPercent;
+                    int stopLossPercent;
 
                     try {
                         positionSide = PositionSide.valueOf(ctx.secondArg());

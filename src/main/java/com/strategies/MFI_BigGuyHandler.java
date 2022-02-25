@@ -66,12 +66,15 @@ public class MFI_BigGuyHandler extends StrategyHandler {
                     && pifagorMfiSignal.getAction().equals(PIFAGOR_MFI_Signal.Action.STRONG_BUY)
                     && currIndex - 1 == getCandlestickIndex(pifagorMfiSignal.getTime(), strategyProps.getInterval())) {
                 Position position = requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG);
-
                 if (position == null) {
-                    requestSender.openLongPositionMarket(strategyProps.getTicker(), MarginType.ISOLATED, strategyProps.getAmount(), strategyProps.getLeverage());
-                    requestSender.cancelOrders(strategyProps.getTicker());
-                    TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG));
-                    TradeLogger.logTP_SLOrders(requestSender.postTP_SLOrders(strategyProps.getTicker(), PositionSide.LONG, strategyProps.getTakeProfit(), strategyProps.getStopLoss()));
+                    try {
+                        requestSender.openLongPositionMarket(strategyProps.getTicker(), MarginType.ISOLATED, strategyProps.getAmount(), strategyProps.getLeverage());
+                        requestSender.cancelOrders(strategyProps.getTicker());
+                        TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG));
+                        TradeLogger.logTP_SLOrders(requestSender.postTP_SLOrders(strategyProps.getTicker(), PositionSide.LONG, strategyProps.getTakeProfit(), strategyProps.getStopLoss()));
+                    } catch (RuntimeException exception) {
+                        TradeLogger.logTgBot(I18nSupport.i18n_literals("error.occured", exception.getMessage()));
+                    }
                 } else {
                     TradeLogger.logTgBot(I18nSupport.i18n_literals("position.already.opened", position.getEntryPrice()));
                 }

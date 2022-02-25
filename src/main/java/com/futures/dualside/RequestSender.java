@@ -47,12 +47,12 @@ public class RequestSender {
 
     public synchronized TP_SL postTP_SLOrders(String symbol, PositionSide positionSide, int takeProfitPercent, int stopLossPercent) {
         OrderSide orderSide = positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY;
-        PositionRisk positionRisk = getPositionRisk(syncRequestClient.getPositionRisk(symbol), symbol, positionSide);
+        Position position = getPosition(symbol, positionSide);
 
         TP_SL tp_sl = null;
 
-        if (positionRisk != null) {
-            tp_sl = new TP_SL(positionSide, positionRisk.getEntryPrice(), takeProfitPercent, stopLossPercent);
+        if (position != null) {
+            tp_sl = new TP_SL(positionSide, new BigDecimal(position.getEntryPrice()), takeProfitPercent, stopLossPercent);
 
             if (stopLossPercent != 0) {
                 tp_sl.setStopLossOrder(syncRequestClient.postOrder(symbol,
