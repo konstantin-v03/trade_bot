@@ -3,6 +3,7 @@ package com.strategies;
 import com.futures.Amount;
 
 public class StrategyProps {
+    private final Strategy strategy;
     private final String ticker;
     private final Amount amount;
     private final int leverage;
@@ -11,7 +12,8 @@ public class StrategyProps {
     private final int stopLoss;
     private final boolean debugMode;
 
-    public StrategyProps(String ticker, Amount amount, int leverage, int interval, int takeProfit, int stopLoss, boolean debugMode) {
+    public StrategyProps(Strategy strategy, String ticker, Amount amount, int leverage, int interval, int takeProfit, int stopLoss, boolean debugMode) {
+        this.strategy = strategy;
         this.ticker = ticker;
         this.amount = amount;
         this.leverage = leverage;
@@ -19,6 +21,10 @@ public class StrategyProps {
         this.takeProfit = takeProfit;
         this.stopLoss = stopLoss;
         this.debugMode = debugMode;
+    }
+
+    public Strategy getStrategy() {
+        return strategy;
     }
 
     public String getTicker() {

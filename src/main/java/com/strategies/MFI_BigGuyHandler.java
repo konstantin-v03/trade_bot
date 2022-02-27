@@ -17,8 +17,6 @@ import java.util.*;
 import static com.utils.Utils.getCandlestickIndex;
 
 public class MFI_BigGuyHandler extends StrategyHandler {
-    public static final String NAME = "PIFAGOR_MFI_BIG_GUY";
-
     private PIFAGOR_MFI_Signal pifagorMfiSignal;
     private PIFAGOR_KHALIFA_Signal pifagorKhalifaSignal;
 

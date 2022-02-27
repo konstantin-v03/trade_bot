@@ -13,4 +13,8 @@ public abstract class StrategyHandler {
     }
 
     public abstract void process(JSONObject inputSignal);
+
+    public StrategyProps getStrategyProps() {
+        return strategyProps;
+    }
 }

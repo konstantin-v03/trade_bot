@@ -7,6 +7,7 @@ import com.futures.Amount;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
 import com.strategies.MFI_BigGuyHandler;
+import com.strategies.Strategy;
 import com.strategies.StrategyProps;
 import com.tradebot.TradeBot;
 import com.utils.I18nSupport;
@@ -16,6 +17,7 @@ import org.telegram.abilitybots.api.objects.Locality;
 import org.telegram.abilitybots.api.objects.Privacy;
 import org.telegram.abilitybots.api.toggle.CustomToggle;
 
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class TelegramTradeBot extends AbilityBot {
@@ -130,9 +132,10 @@ public class TelegramTradeBot extends AbilityBot {
                 .input(8)
                 .action(ctx -> {
                     try {
-                        if (ctx.firstArg().equals(MFI_BigGuyHandler.NAME)) {
-                            tradeBot.enabledStrategies.put(ctx.firstArg(), new MFI_BigGuyHandler(requestSender,
-                                    new StrategyProps(ctx.secondArg(),
+                        if (Strategy.valueOf(ctx.firstArg()).equals(Strategy.MFI_BIG_GUY)) {
+                            tradeBot.enabledStrategies.put(ctx.secondArg(), new MFI_BigGuyHandler(requestSender,
+                                    new StrategyProps(Strategy.MFI_BIG_GUY,
+                                            ctx.secondArg(),
                                             new Amount(ctx.thirdArg()),
                                             Integer.parseInt(ctx.arguments()[3]),
                                             Integer.parseInt(ctx.arguments()[4]),
@@ -167,14 +170,40 @@ public class TelegramTradeBot extends AbilityBot {
                 .build();
     }
 
-    public Ability getHandlers() {
+    public Ability getSupportedStrategies() {
         return Ability.builder()
-                .name(I18nSupport.i18n_literals("get.enabled.handlers"))
-                .info(I18nSupport.i18n_literals("get.enabled.handlers.info"))
+                .name(I18nSupport.i18n_literals("get.supported.strategies"))
+                .info(I18nSupport.i18n_literals("get.supported.strategies.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(0)
-                .action(ctx -> TradeLogger.logTgBot(tradeBot.enabledStrategies.values().stream().map(object -> object.getClass().getCanonicalName()).collect(Collectors.joining("\n"))))
+                .action(ctx -> TradeLogger.logTgBot(I18nSupport.i18n_literals("supported.strategies",
+                        Arrays.stream(Strategy.values())
+                                .map(str -> I18nSupport.i18n_literals("supported.strategy", str))
+                                .collect(Collectors.joining("\n")))))
+                .build();
+    }
+
+    public Ability getEnabledStrategies() {
+        return Ability.builder()
+                .name(I18nSupport.i18n_literals("get.enabled.strategies"))
+                .info(I18nSupport.i18n_literals("get.enabled.strategies.info"))
+                .privacy(Privacy.CREATOR)
+                .locality(Locality.USER)
+                .input(0)
+                .action(ctx -> {
+                    TradeLogger.logTgBot(I18nSupport.i18n_literals("enabled.strategies",
+                            tradeBot.enabledStrategies.values().stream().map(strategyHandler -> {
+                                StrategyProps strategyProps = strategyHandler.getStrategyProps();
+                                return I18nSupport.i18n_literals("enabled.strategy",
+                                        strategyProps.getTicker(),
+                                        strategyProps.getStrategy(),
+                                        strategyProps.getAmount().toString(),
+                                        strategyProps.getLeverage(),
+                                        strategyProps.getTakeProfit(),
+                                        strategyProps.getStopLoss());
+                            }).collect(Collectors.joining("\n\n"))));
+                })
                 .build();
     }
 }

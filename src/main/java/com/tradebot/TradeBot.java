@@ -4,7 +4,6 @@ import com.binance.client.SyncRequestClient;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
 import com.server.WebhookReceiver;
-import com.strategies.MFI_BigGuyHandler;
 import com.strategies.StrategyHandler;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -45,19 +44,16 @@ public class TradeBot implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) {
-        StrategyHandler strategyHandler;
-        String strategyName;
-
         try {
             JSONObject inputRequest = new JSONObject(Utils.readAllFromInputStream(httpExchange.getRequestBody()));
 
-            strategyName = inputRequest.getString("strategy");
+            StrategyHandler strategyHandler = enabledStrategies.get(inputRequest.getString("ticker"));
 
-            if (strategyName.equals(MFI_BigGuyHandler.NAME) && (strategyHandler = enabledStrategies.get(MFI_BigGuyHandler.NAME)) != null) {
-                strategyHandler.process(inputRequest.getJSONObject("signal"));
+            if (strategyHandler != null) {
+                strategyHandler.process(inputRequest);
             }
-        } catch (JSONException jsonException) {
-            TradeLogger.logTgBot(I18nSupport.i18n_literals("error.occured", jsonException.getMessage()));
+        } catch (JSONException exception) {
+            TradeLogger.logTgBot(I18nSupport.i18n_literals("error.occured", exception.getMessage()));
         }
 
         Utils.answerOkToHttpsRequest(httpExchange);
