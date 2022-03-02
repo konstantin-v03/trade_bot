@@ -6,6 +6,7 @@ import com.binance.client.model.trade.Order;
 import com.futures.Amount;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
+import com.strategies.AltcoinsHandler;
 import com.strategies.MFI_BigGuyHandler;
 import com.strategies.Strategy;
 import com.strategies.StrategyProps;
@@ -132,20 +133,26 @@ public class TelegramTradeBot extends AbilityBot {
                 .input(8)
                 .action(ctx -> {
                     try {
-                        if (Strategy.valueOf(ctx.firstArg()).equals(Strategy.MFI_BIG_GUY)) {
-                            tradeBot.enabledStrategies.put(ctx.secondArg(), new MFI_BigGuyHandler(requestSender,
-                                    new StrategyProps(Strategy.MFI_BIG_GUY,
-                                            ctx.secondArg(),
-                                            new Amount(ctx.thirdArg()),
-                                            Integer.parseInt(ctx.arguments()[3]),
-                                            Integer.parseInt(ctx.arguments()[4]),
-                                            Integer.parseInt(ctx.arguments()[5]),
-                                            Integer.parseInt(ctx.arguments()[6]),
-                                            Boolean.parseBoolean(ctx.arguments()[7]))));
-                            TradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.enabled"));
+                        Strategy strategy = Strategy.valueOf(ctx.firstArg());
+                        StrategyProps strategyProps = new StrategyProps(strategy,
+                                ctx.secondArg(),
+                                new Amount(ctx.thirdArg()),
+                                Integer.parseInt(ctx.arguments()[3]),
+                                Integer.parseInt(ctx.arguments()[4]),
+                                Integer.parseInt(ctx.arguments()[5]),
+                                Boolean.parseBoolean(ctx.arguments()[6]));
+
+                        if (strategy.equals(Strategy.MFI_BIG_GUY)) {
+                            tradeBot.enabledStrategies.put(ctx.secondArg(),
+                                    new MFI_BigGuyHandler(requestSender, strategyProps));
+                        } else if (strategy.equals(Strategy.ALTCOINS)) {
+                            tradeBot.enabledStrategies.put(ctx.secondArg(),
+                                    new AltcoinsHandler(requestSender, strategyProps));
                         } else {
                             throw new IllegalArgumentException("Strategy is not supported!");
                         }
+
+                        TradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.enabled"));
                     } catch (IllegalArgumentException illegalArgumentException) {
                         TradeLogger.logTgBot(illegalArgumentException.getMessage());
                     }

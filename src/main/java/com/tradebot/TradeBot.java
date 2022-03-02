@@ -52,7 +52,7 @@ public class TradeBot implements HttpHandler {
             if (strategyHandler != null) {
                 strategyHandler.process(inputRequest);
             }
-        } catch (JSONException exception) {
+        } catch (JSONException|IllegalArgumentException exception) {
             TradeLogger.logTgBot(I18nSupport.i18n_literals("error.occured", exception.getMessage()));
         }
 
