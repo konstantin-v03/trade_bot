@@ -130,7 +130,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .info(I18nSupport.i18n_literals("enable.strategy.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
-                .input(8)
+                .input(7)
                 .action(ctx -> {
                     try {
                         Strategy strategy = Strategy.valueOf(ctx.firstArg());
@@ -208,7 +208,8 @@ public class TelegramTradeBot extends AbilityBot {
                                         strategyProps.getAmount().toString(),
                                         strategyProps.getLeverage(),
                                         strategyProps.getTakeProfit(),
-                                        strategyProps.getStopLoss());
+                                        strategyProps.getStopLoss(),
+                                        strategyProps.isDebugMode() ? 0 : 1);
                             }).collect(Collectors.joining("\n\n"))));
                 })
                 .build();
