@@ -134,6 +134,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .action(ctx -> {
                     try {
                         Strategy strategy = Strategy.valueOf(ctx.firstArg());
+
                         StrategyProps strategyProps = new StrategyProps(strategy,
                                 ctx.secondArg(),
                                 new Amount(ctx.thirdArg()),
@@ -198,20 +199,18 @@ public class TelegramTradeBot extends AbilityBot {
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(0)
-                .action(ctx -> {
-                    TradeLogger.logTgBot(I18nSupport.i18n_literals("enabled.strategies",
-                            tradeBot.enabledStrategies.values().stream().map(strategyHandler -> {
-                                StrategyProps strategyProps = strategyHandler.getStrategyProps();
-                                return I18nSupport.i18n_literals("enabled.strategy",
-                                        strategyProps.getTicker(),
-                                        strategyProps.getStrategy(),
-                                        strategyProps.getAmount().toString(),
-                                        strategyProps.getLeverage(),
-                                        strategyProps.getTakeProfit(),
-                                        strategyProps.getStopLoss(),
-                                        strategyProps.isDebugMode() ? 0 : 1);
-                            }).collect(Collectors.joining("\n\n"))));
-                })
+                .action(ctx -> TradeLogger.logTgBot(I18nSupport.i18n_literals("enabled.strategies",
+                        tradeBot.enabledStrategies.values().stream().map(strategyHandler -> {
+                            StrategyProps strategyProps = strategyHandler.getStrategyProps();
+                            return I18nSupport.i18n_literals("enabled.strategy",
+                                    strategyProps.getTicker(),
+                                    strategyProps.getStrategy(),
+                                    strategyProps.getAmount().toString(),
+                                    strategyProps.getLeverage(),
+                                    strategyProps.getTakeProfit(),
+                                    strategyProps.getStopLoss(),
+                                    strategyProps.isDebugMode() ? 0 : 1);
+                        }).collect(Collectors.joining("\n\n")))))
                 .build();
     }
 }
