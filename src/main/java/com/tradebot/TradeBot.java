@@ -44,8 +44,13 @@ public class TradeBot implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) {
+        process(Utils.readAllFromInputStream(httpExchange.getRequestBody()));
+        Utils.answerOkToHttpsRequest(httpExchange);
+    }
+
+    public void process(String inputSignal) {
         try {
-            JSONObject inputRequest = new JSONObject(Utils.readAllFromInputStream(httpExchange.getRequestBody()));
+            JSONObject inputRequest = new JSONObject(inputSignal);
 
             StrategyHandler strategyHandler = enabledStrategies.get(inputRequest.getString("ticker"));
 
@@ -55,7 +60,5 @@ public class TradeBot implements HttpHandler {
         } catch (JSONException|IllegalArgumentException exception) {
             TradeLogger.logTgBot(I18nSupport.i18n_literals("error.occured", exception.getMessage()));
         }
-
-        Utils.answerOkToHttpsRequest(httpExchange);
     }
 }

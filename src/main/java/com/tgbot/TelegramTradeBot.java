@@ -13,12 +13,13 @@ import com.strategies.StrategyProps;
 import com.tradebot.TradeBot;
 import com.utils.I18nSupport;
 import org.telegram.abilitybots.api.bot.AbilityBot;
-import org.telegram.abilitybots.api.objects.Ability;
-import org.telegram.abilitybots.api.objects.Locality;
-import org.telegram.abilitybots.api.objects.Privacy;
+import org.telegram.abilitybots.api.objects.*;
 import org.telegram.abilitybots.api.toggle.CustomToggle;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.Arrays;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class TelegramTradeBot extends AbilityBot {
@@ -149,12 +150,14 @@ public class TelegramTradeBot extends AbilityBot {
                         } else if (strategy.equals(Strategy.ALTCOINS)) {
                             tradeBot.enabledStrategies.put(ctx.secondArg(),
                                     new AltcoinsHandler(requestSender, strategyProps));
+                            TradeLogger.logTgBot(String.format(I18nSupport.i18n_literals("pifagor.altcoins.specify.current"), ctx.secondArg()));
                         } else {
                             throw new IllegalArgumentException("Strategy is not supported!");
                         }
 
                         TradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.enabled"));
                     } catch (IllegalArgumentException illegalArgumentException) {
+                        illegalArgumentException.printStackTrace();
                         TradeLogger.logTgBot(illegalArgumentException.getMessage());
                     }
                 })
@@ -212,5 +215,33 @@ public class TelegramTradeBot extends AbilityBot {
                                     strategyProps.isDebugMode() ? 0 : 1);
                         }).collect(Collectors.joining("\n\n")))))
                 .build();
+    }
+
+    public Ability processSignal() {
+        return Ability.builder()
+                .name(I18nSupport.i18n_literals("process.signal"))
+                .info(I18nSupport.i18n_literals("process.signal.info"))
+                .privacy(Privacy.CREATOR)
+                .locality(Locality.USER)
+                .input(0)
+                .action(ctx -> silent.forceReply(I18nSupport.i18n_literals("process.signal.response"), ctx.chatId()))
+                .reply(upd -> tradeBot.process(upd.getMessage().getText()),
+                        Flag.MESSAGE,
+                        Flag.REPLY,
+                        isReplyToBot(),
+                        isReplyToMessage(I18nSupport.i18n_literals("process.signal.response"))
+                )
+                .build();
+    }
+
+    private Predicate<Update> isReplyToMessage(String message) {
+        return upd -> {
+            Message reply = upd.getMessage().getReplyToMessage();
+            return reply.hasText() && reply.getText().equalsIgnoreCase(message);
+        };
+    }
+
+    private Predicate<Update> isReplyToBot() {
+        return upd -> upd.getMessage().getReplyToMessage().getFrom().getUserName().equalsIgnoreCase(getBotUsername());
     }
 }
