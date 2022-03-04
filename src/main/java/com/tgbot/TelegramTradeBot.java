@@ -12,6 +12,7 @@ import com.strategies.Strategy;
 import com.strategies.StrategyProps;
 import com.tradebot.TradeBot;
 import com.utils.I18nSupport;
+import com.utils.TgBotUtils;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.*;
 import org.telegram.abilitybots.api.toggle.CustomToggle;
@@ -131,7 +132,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .info(I18nSupport.i18n_literals("enable.strategy.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
-                .input(7)
+                .input(8)
                 .action(ctx -> {
                     try {
                         Strategy strategy = Strategy.valueOf(ctx.firstArg());
@@ -142,7 +143,8 @@ public class TelegramTradeBot extends AbilityBot {
                                 Integer.parseInt(ctx.arguments()[3]),
                                 Integer.parseInt(ctx.arguments()[4]),
                                 Integer.parseInt(ctx.arguments()[5]),
-                                Boolean.parseBoolean(ctx.arguments()[6]));
+                                Boolean.parseBoolean(ctx.arguments()[6]),
+                                ctx.arguments()[7]);
 
                         if (strategy.equals(Strategy.MFI_BIG_GUY)) {
                             tradeBot.enabledStrategies.put(ctx.secondArg(),
@@ -150,7 +152,6 @@ public class TelegramTradeBot extends AbilityBot {
                         } else if (strategy.equals(Strategy.ALTCOINS)) {
                             tradeBot.enabledStrategies.put(ctx.secondArg(),
                                     new AltcoinsHandler(requestSender, strategyProps));
-                            TradeLogger.logTgBot(String.format(I18nSupport.i18n_literals("pifagor.altcoins.specify.current"), ctx.secondArg()));
                         } else {
                             throw new IllegalArgumentException("Strategy is not supported!");
                         }
@@ -228,20 +229,9 @@ public class TelegramTradeBot extends AbilityBot {
                 .reply(upd -> tradeBot.process(upd.getMessage().getText()),
                         Flag.MESSAGE,
                         Flag.REPLY,
-                        isReplyToBot(),
-                        isReplyToMessage(I18nSupport.i18n_literals("process.signal.response"))
+                        TgBotUtils.isReplyToBot(getBotUsername()),
+                        TgBotUtils.isReplyToMessage(I18nSupport.i18n_literals("process.signal.response"))
                 )
                 .build();
-    }
-
-    private Predicate<Update> isReplyToMessage(String message) {
-        return upd -> {
-            Message reply = upd.getMessage().getReplyToMessage();
-            return reply.hasText() && reply.getText().equalsIgnoreCase(message);
-        };
-    }
-
-    private Predicate<Update> isReplyToBot() {
-        return upd -> upd.getMessage().getReplyToMessage().getFrom().getUserName().equalsIgnoreCase(getBotUsername());
     }
 }

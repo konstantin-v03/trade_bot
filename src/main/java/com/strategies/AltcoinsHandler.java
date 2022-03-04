@@ -8,9 +8,13 @@ import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
 import com.signal.PIFAGOR_ALTCOINS_SIGNAL;
 import com.signal.Signal;
+import com.utils.Constants;
 import com.utils.I18nSupport;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Date;
+import java.util.Properties;
 
 import static com.utils.Constants.INTERVAL_1h;
 import static com.utils.Constants.INTERVAL_4h;
@@ -21,6 +25,29 @@ public class AltcoinsHandler extends StrategyHandler {
 
     public AltcoinsHandler(RequestSender requestSender, StrategyProps strategyProps) {
         super(requestSender, strategyProps);
+
+        Properties properties = strategyProps.getProperties();
+        String action1hStr, action4hStr;
+
+        if (properties != null && (action1hStr = properties.getProperty(Constants.INTERVAL_1H_STR)) != null &&
+                (action4hStr = properties.getProperty(Constants.INTERVAL_4H_STR)) != null) {
+            PIFAGOR_ALTCOINS_SIGNAL.Action action1h = PIFAGOR_ALTCOINS_SIGNAL.Action.valueOf(action1hStr);
+            PIFAGOR_ALTCOINS_SIGNAL.Action action4h = PIFAGOR_ALTCOINS_SIGNAL.Action.valueOf(action4hStr);
+
+            pifagorAltcoinsSignal1h = new PIFAGOR_ALTCOINS_SIGNAL(strategyProps.getTicker(),
+                    null,
+                    null,
+                    null,
+                    new Date(),
+                    action1h);
+
+            pifagorAltcoinsSignal4h = new PIFAGOR_ALTCOINS_SIGNAL(strategyProps.getTicker(),
+                    null,
+                    null,
+                    null,
+                    new Date(),
+                    action4h);
+        }
     }
 
     @Override
@@ -43,13 +70,13 @@ public class AltcoinsHandler extends StrategyHandler {
             TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.signal",
                     pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ? 0 : 1,
                     pifagorAltcoinsSignal.getAction(),
-                    pifagorAltcoinsSignal.getInterval() == INTERVAL_1h ? "1h" : "4h",
+                    pifagorAltcoinsSignal.getInterval() == INTERVAL_1h ? Constants.INTERVAL_1H_STR : Constants.INTERVAL_4H_STR,
                     pifagorAltcoinsSignal.getClose()));
 
             if (strategyProps.isDebugMode()) {
                 TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.debug",
-                        pifagorAltcoinsSignal1h,
-                        pifagorAltcoinsSignal4h));
+                        pifagorAltcoinsSignal1h == null ? 0 : pifagorAltcoinsSignal1h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ? 1 : 2,
+                        pifagorAltcoinsSignal4h == null ? 0 : pifagorAltcoinsSignal4h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ? 1 : 2));
             }
         } else {
             throw new JSONException(I18nSupport.i18n_literals("unsupported.signal.exception"));
