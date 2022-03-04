@@ -3,6 +3,7 @@ package com.strategies;
 import com.binance.client.model.enums.MarginType;
 import com.binance.client.model.enums.OrderSide;
 import com.binance.client.model.enums.PositionSide;
+import com.binance.client.model.trade.Position;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
 import com.signal.PIFAGOR_ALTCOINS_SIGNAL;
@@ -54,14 +55,15 @@ public class AltcoinsHandler extends StrategyHandler {
             throw new JSONException(I18nSupport.i18n_literals("unsupported.signal.exception"));
         }
 
-        if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.SELL) &&
-                requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG) != null) {
+        Position longPosition = requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG);
+        Position shortPosition = requestSender.getPosition(strategyProps.getTicker(), PositionSide.SHORT);
+
+        if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.SELL) && longPosition != null) {
             TradeLogger.logClosePosition(requestSender.getMyTrade(strategyProps.getTicker(),
                     requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.LONG).getOrderId()));
         }
 
-        if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) &&
-                requestSender.getPosition(strategyProps.getTicker(), PositionSide.SHORT) != null) {
+        if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) && shortPosition != null) {
             TradeLogger.logClosePosition(requestSender.getMyTrade(strategyProps.getTicker(),
                     requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.SHORT).getOrderId()));
         }
@@ -69,18 +71,24 @@ public class AltcoinsHandler extends StrategyHandler {
         if (pifagorAltcoinsSignal1h != null &&
                 pifagorAltcoinsSignal4h != null &&
                 pifagorAltcoinsSignal1h.getAction().equals(pifagorAltcoinsSignal4h.getAction())) {
-            requestSender.openPositionMarket(strategyProps.getTicker(),
-                    pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
-                            OrderSide.BUY : OrderSide.SELL,
-                    MarginType.ISOLATED,
-                    pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
-                            PositionSide.LONG : PositionSide.SHORT,
-                    strategyProps.getAmount(),
-                    strategyProps.getLeverage());
+            if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) && longPosition != null) {
+                TradeLogger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.LONG, longPosition.getEntryPrice()));
+            } else if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.SELL) && shortPosition != null) {
+                TradeLogger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.SHORT, shortPosition.getEntryPrice()));
+            } else {
+                requestSender.openPositionMarket(strategyProps.getTicker(),
+                        pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
+                                OrderSide.BUY : OrderSide.SELL,
+                        MarginType.ISOLATED,
+                        pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
+                                PositionSide.LONG : PositionSide.SHORT,
+                        strategyProps.getAmount(),
+                        strategyProps.getLeverage());
 
-            TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(),
-                    pifagorAltcoinsSignal1h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
-                            PositionSide.LONG : PositionSide.SHORT));
+                TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(),
+                        pifagorAltcoinsSignal1h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
+                                PositionSide.LONG : PositionSide.SHORT));
+            }
         }
     }
 }

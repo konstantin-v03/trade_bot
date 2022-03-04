@@ -71,7 +71,7 @@ public class MFI_BigGuyHandler extends StrategyHandler {
                 TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG));
                 TradeLogger.logTP_SLOrders(requestSender.postTP_SLOrders(strategyProps.getTicker(), PositionSide.LONG, strategyProps.getTakeProfit(), strategyProps.getStopLoss()));
             } else {
-                TradeLogger.logTgBot(I18nSupport.i18n_literals("position.already.opened", position.getEntryPrice()));
+                TradeLogger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.LONG, position.getEntryPrice()));
             }
         }
     }
