@@ -58,7 +58,7 @@ public class TradeBot implements HttpHandler {
                 strategyHandler.process(inputRequest);
             }
         } catch (JSONException|IllegalArgumentException exception) {
-            TradeLogger.logTgBot(I18nSupport.i18n_literals("error.occured", exception.getMessage()));
+            TradeLogger.logException(exception);
         }
     }
 }

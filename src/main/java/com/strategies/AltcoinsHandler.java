@@ -68,6 +68,7 @@ public class AltcoinsHandler extends StrategyHandler {
             }
 
             TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.signal",
+                    pifagorAltcoinsSignal.getTicker(),
                     pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ? 0 : 1,
                     pifagorAltcoinsSignal.getAction(),
                     pifagorAltcoinsSignal.getInterval() == INTERVAL_1h ? Constants.INTERVAL_1H_STR : Constants.INTERVAL_4H_STR,
@@ -75,6 +76,7 @@ public class AltcoinsHandler extends StrategyHandler {
 
             if (strategyProps.isDebugMode()) {
                 TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.debug",
+                        pifagorAltcoinsSignal.getTicker(),
                         pifagorAltcoinsSignal1h == null ? 0 : pifagorAltcoinsSignal1h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ? 1 : 2,
                         pifagorAltcoinsSignal4h == null ? 0 : pifagorAltcoinsSignal4h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ? 1 : 2));
             }
@@ -86,11 +88,23 @@ public class AltcoinsHandler extends StrategyHandler {
         Position shortPosition = requestSender.getPosition(strategyProps.getTicker(), PositionSide.SHORT);
 
         if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.SELL) && longPosition != null) {
+            if (strategyProps.isDebugMode()) {
+                TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.try.close.debug",
+                        strategyProps.getTicker(),
+                        PositionSide.LONG));
+            }
+
             TradeLogger.logClosePosition(requestSender.getMyTrade(strategyProps.getTicker(),
                     requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.LONG).getOrderId()));
         }
 
         if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) && shortPosition != null) {
+            if (strategyProps.isDebugMode()) {
+                TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.try.close.debug",
+                        strategyProps.getTicker(),
+                        PositionSide.SHORT));
+            }
+
             TradeLogger.logClosePosition(requestSender.getMyTrade(strategyProps.getTicker(),
                     requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.SHORT).getOrderId()));
         }
@@ -103,6 +117,13 @@ public class AltcoinsHandler extends StrategyHandler {
             } else if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.SELL) && shortPosition != null) {
                 TradeLogger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.SHORT, shortPosition.getEntryPrice()));
             } else {
+                if (strategyProps.isDebugMode()) {
+                    TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.try.open.debug",
+                            strategyProps.getTicker(),
+                            pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
+                                    PositionSide.LONG : PositionSide.SHORT));
+                }
+
                 requestSender.openPositionMarket(strategyProps.getTicker(),
                         pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
                                 OrderSide.BUY : OrderSide.SELL,

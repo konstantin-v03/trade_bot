@@ -98,11 +98,11 @@ public class RequestSender {
 
     public synchronized Order closePositionMarket(String symbol, PositionSide positionSide) {
         OrderSide orderSide = positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY;
-        PositionRisk positionRisk = getPositionRisk(syncRequestClient.getPositionRisk(symbol), symbol, positionSide);
+        Position position = getPosition(symbol, positionSide);
 
         Order order = null;
 
-        if (positionRisk != null && positionRisk.getPositionAmt().compareTo(BigDecimal.ZERO) != 0) {
+        if (position != null && position.getPositionAmt().compareTo(BigDecimal.ZERO) != 0) {
             order =
                     syncRequestClient.postOrder(
                             symbol,
@@ -110,7 +110,7 @@ public class RequestSender {
                             positionSide,
                             OrderType.MARKET,
                             null,
-                            positionRisk.getPositionAmt().toString(),
+                            position.getPositionAmt().toString(),
                             null,
                             null,
                             null,

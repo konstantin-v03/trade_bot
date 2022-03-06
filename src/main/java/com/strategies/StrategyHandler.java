@@ -1,6 +1,7 @@
 package com.strategies;
 
 import com.futures.dualside.RequestSender;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public abstract class StrategyHandler {
@@ -12,7 +13,7 @@ public abstract class StrategyHandler {
         this.strategyProps = strategyProps;
     }
 
-    public abstract void process(JSONObject inputSignal);
+    public abstract void process(JSONObject inputSignal) throws JSONException, IllegalArgumentException;
 
     public StrategyProps getStrategyProps() {
         return strategyProps;

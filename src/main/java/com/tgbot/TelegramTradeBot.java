@@ -159,7 +159,7 @@ public class TelegramTradeBot extends AbilityBot {
                         TradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.enabled"));
                     } catch (IllegalArgumentException illegalArgumentException) {
                         illegalArgumentException.printStackTrace();
-                        TradeLogger.logTgBot(illegalArgumentException.getMessage());
+                        TradeLogger.logException(illegalArgumentException);
                     }
                 })
                 .build();
