@@ -3,6 +3,7 @@ package com.strategies;
 import com.binance.client.model.enums.MarginType;
 import com.binance.client.model.enums.OrderSide;
 import com.binance.client.model.enums.PositionSide;
+import com.binance.client.model.trade.Order;
 import com.binance.client.model.trade.Position;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
@@ -94,8 +95,13 @@ public class AltcoinsHandler extends StrategyHandler {
                         PositionSide.LONG));
             }
 
-            TradeLogger.logClosePosition(requestSender.getMyTrade(strategyProps.getTicker(),
-                    requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.LONG).getOrderId()));
+            Order order = requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.LONG);
+
+            if (order == null) {
+                throw new RuntimeException("order = null!");
+            } else {
+                TradeLogger.logClosePosition(requestSender.getMyTrade(strategyProps.getTicker(), order.getOrderId()));
+            }
         }
 
         if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) && shortPosition != null) {
@@ -105,8 +111,13 @@ public class AltcoinsHandler extends StrategyHandler {
                         PositionSide.SHORT));
             }
 
-            TradeLogger.logClosePosition(requestSender.getMyTrade(strategyProps.getTicker(),
-                    requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.SHORT).getOrderId()));
+            Order order = requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.SHORT);
+
+            if (order == null) {
+                throw new RuntimeException("order = null!");
+            } else {
+                TradeLogger.logClosePosition(requestSender.getMyTrade(strategyProps.getTicker(), order.getOrderId()));
+            }
         }
 
         if (pifagorAltcoinsSignal1h != null &&

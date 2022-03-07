@@ -8,9 +8,7 @@ import com.strategies.StrategyHandler;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.tgbot.TelegramTradeBot;
-import com.utils.I18nSupport;
 import com.utils.Utils;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -44,7 +42,7 @@ public class TradeBot implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) {
-        process(Utils.readAllFromInputStream(httpExchange.getRequestBody()));
+        new Thread(() -> process(Utils.readAllFromInputStream(httpExchange.getRequestBody()))).start();
         Utils.answerOkToHttpsRequest(httpExchange);
     }
 
@@ -57,7 +55,7 @@ public class TradeBot implements HttpHandler {
             if (strategyHandler != null) {
                 strategyHandler.process(inputRequest);
             }
-        } catch (JSONException|IllegalArgumentException exception) {
+        } catch (RuntimeException exception) {
             TradeLogger.logException(exception);
         }
     }

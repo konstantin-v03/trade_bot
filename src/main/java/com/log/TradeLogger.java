@@ -44,7 +44,7 @@ public class TradeLogger {
     }
 
     public static void logException(Exception exception) {
-        logTgBot(I18nSupport.i18n_literals("error.occured", exception.getMessage()));
+        logTgBot(I18nSupport.i18n_literals("error.occured", exception));
     }
 
     public static void logTgBot(String log) {

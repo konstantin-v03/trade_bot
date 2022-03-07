@@ -16,11 +16,8 @@ import com.utils.TgBotUtils;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.*;
 import org.telegram.abilitybots.api.toggle.CustomToggle;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.Arrays;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class TelegramTradeBot extends AbilityBot {
