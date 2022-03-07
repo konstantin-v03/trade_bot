@@ -42,7 +42,10 @@ public class TradeBot implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) {
-        new Thread(() -> process(Utils.readAllFromInputStream(httpExchange.getRequestBody()))).start();
+        String inputSignal = Utils.readAllFromInputStream(httpExchange.getRequestBody());
+
+        new Thread(() -> process(inputSignal)).start();
+
         Utils.answerOkToHttpsRequest(httpExchange);
     }
 
