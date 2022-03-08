@@ -6,17 +6,18 @@ import com.binance.client.model.trade.Order;
 import com.futures.Amount;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
-import com.strategies.AltcoinsHandler;
-import com.strategies.MFI_BigGuyHandler;
-import com.strategies.Strategy;
-import com.strategies.StrategyProps;
+import com.strategies.*;
 import com.tradebot.TradeBot;
 import com.utils.I18nSupport;
 import com.utils.TgBotUtils;
+import com.utils.Utils;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.*;
 import org.telegram.abilitybots.api.toggle.CustomToggle;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -170,8 +171,11 @@ public class TelegramTradeBot extends AbilityBot {
                 .locality(Locality.USER)
                 .input(1)
                 .action(ctx -> {
-                    if (tradeBot.enabledStrategies.remove(ctx.firstArg()) != null) {
+                    StrategyHandler strategyHandler;
+
+                    if ((strategyHandler = tradeBot.enabledStrategies.remove(ctx.firstArg())) != null) {
                         TradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.disabled"));
+                        strategyHandler.close();
                     } else {
                         TradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.not.found"));
                     }
@@ -212,6 +216,32 @@ public class TelegramTradeBot extends AbilityBot {
                                     strategyProps.getStopLoss(),
                                     strategyProps.isDebugMode() ? 0 : 1);
                         }).collect(Collectors.joining("\n\n")))))
+                .build();
+    }
+
+    public Ability getLog() {
+        return Ability.builder()
+                .name(I18nSupport.i18n_literals("get.log"))
+                .info(I18nSupport.i18n_literals("get.log.info"))
+                .privacy(Privacy.CREATOR)
+                .locality(Locality.USER)
+                .input(2)
+                .action(ctx -> {
+                    Strategy strategy;
+
+                    try {
+                        strategy = Strategy.valueOf(ctx.firstArg());
+                    } catch (IllegalArgumentException illegalArgumentException) {
+                        TradeLogger.logException(illegalArgumentException);
+                        return;
+                    }
+
+                    executeAsync(SendDocument
+                            .builder()
+                            .chatId(String.valueOf(ctx.chatId()))
+                            .document(new InputFile().setMedia(new File(Utils.getLogFileName(strategy, ctx.secondArg()))))
+                            .build());
+                })
                 .build();
     }
 

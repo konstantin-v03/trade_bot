@@ -6,10 +6,21 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
 
+import com.strategies.Strategy;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
 
 public class Utils {
+    public static void appendStrToFile(String fileName, String str) throws IOException{
+        BufferedWriter out = new BufferedWriter(new FileWriter(fileName, true));
+        out.write(str);
+        out.close();
+    }
+
+    public static String getLogFileName(Strategy strategy, String ticker) {
+        return strategy + "_" + ticker + ".txt";
+    }
+
     public static String readAllFromInputStream(InputStream inputStream) {
         StringBuilder stringBuilder = new StringBuilder();
 

@@ -3,7 +3,7 @@ package com.strategies;
 import com.binance.client.model.enums.MarginType;
 import com.binance.client.model.enums.OrderSide;
 import com.binance.client.model.enums.PositionSide;
-import com.binance.client.model.trade.Order;
+import com.binance.client.model.trade.MyTrade;
 import com.binance.client.model.trade.Position;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
@@ -95,13 +95,11 @@ public class AltcoinsHandler extends StrategyHandler {
                         PositionSide.LONG));
             }
 
-            Order order = requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.LONG);
+            MyTrade myTrade = requestSender.getMyTrade(strategyProps.getTicker(),
+                    requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.LONG).getOrderId());
 
-            if (order == null) {
-                throw new RuntimeException("order = null!");
-            } else {
-                TradeLogger.logClosePosition(requestSender.getMyTrade(strategyProps.getTicker(), order.getOrderId()));
-            }
+            TradeLogger.logClosePosition(myTrade);
+            TradeLogger.logCloseLog(Strategy.ALTCOINS, myTrade);
         }
 
         if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) && shortPosition != null) {
@@ -111,13 +109,12 @@ public class AltcoinsHandler extends StrategyHandler {
                         PositionSide.SHORT));
             }
 
-            Order order = requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.SHORT);
+            MyTrade myTrade = requestSender.getMyTrade(strategyProps.getTicker(),
+                    requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.SHORT).getOrderId());
 
-            if (order == null) {
-                throw new RuntimeException("order = null!");
-            } else {
-                TradeLogger.logClosePosition(requestSender.getMyTrade(strategyProps.getTicker(), order.getOrderId()));
-            }
+            TradeLogger.logClosePosition(myTrade);
+            TradeLogger.logCloseLog(Strategy.ALTCOINS, myTrade);
+
         }
 
         if (pifagorAltcoinsSignal1h != null &&
@@ -149,5 +146,10 @@ public class AltcoinsHandler extends StrategyHandler {
                                 PositionSide.LONG : PositionSide.SHORT));
             }
         }
+    }
+
+    @Override
+    public void close() {
+
     }
 }

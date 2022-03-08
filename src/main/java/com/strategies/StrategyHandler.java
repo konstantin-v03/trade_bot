@@ -15,6 +15,8 @@ public abstract class StrategyHandler {
 
     public abstract void process(JSONObject inputSignal) throws JSONException, IllegalArgumentException;
 
+    public abstract void close();
+
     public StrategyProps getStrategyProps() {
         return strategyProps;
     }

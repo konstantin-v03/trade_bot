@@ -2,7 +2,9 @@ package com.strategies;
 
 import com.binance.client.model.enums.MarginType;
 import com.binance.client.model.enums.PositionSide;
+import com.binance.client.model.trade.MyTrade;
 import com.binance.client.model.trade.Position;
+import com.futures.TP_SL;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
 import com.signal.PIFAGOR_KHALIFA_Signal;
@@ -18,11 +20,25 @@ import static com.utils.Constants.INTERVAL_5m;
 import static com.utils.Utils.getCandlestickIndex;
 
 public class MFI_BigGuyHandler extends StrategyHandler {
+
     private PIFAGOR_MFI_Signal pifagorMfiSignal;
     private PIFAGOR_KHALIFA_Signal pifagorKhalifaSignal;
 
+    private final Object lock = new Object();
+    private TP_SL tp_sl;
+
+    private final Timer timer = new Timer();
+
     public MFI_BigGuyHandler(RequestSender requestSender, StrategyProps strategyProps) throws IllegalArgumentException {
         super(requestSender, strategyProps);
+
+        timer.schedule(new TimerTask() {
+            public void run() {
+                if (tp_sl != null) {
+                    logTP_SL();
+                }
+            }
+        }, 0, 5 * 60 * 1000);
     }
 
     @Override
@@ -69,10 +85,41 @@ public class MFI_BigGuyHandler extends StrategyHandler {
                 requestSender.openLongPositionMarket(strategyProps.getTicker(), MarginType.ISOLATED, strategyProps.getAmount(), strategyProps.getLeverage());
                 requestSender.cancelOrders(strategyProps.getTicker());
                 TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG));
-                TradeLogger.logTP_SLOrders(requestSender.postTP_SLOrders(strategyProps.getTicker(), PositionSide.LONG, strategyProps.getTakeProfit(), strategyProps.getStopLoss()));
+
+                synchronized (lock) {
+                    TradeLogger.logTP_SLOrders(tp_sl = requestSender.postTP_SLOrders(strategyProps.getTicker(),
+                            PositionSide.LONG,
+                            strategyProps.getTakeProfit(),
+                            strategyProps.getStopLoss()));
+                }
             } else {
                 TradeLogger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.LONG, position.getEntryPrice()));
             }
         }
+    }
+
+    private void logTP_SL() {
+        MyTrade stopLoss, takeProfit;
+
+        synchronized (lock) {
+            if (tp_sl.getStopLossOrder() != null && (stopLoss = requestSender.getMyTrade(strategyProps.getTicker(),
+                    tp_sl.getStopLossOrder().getOrderId())) != null) {
+                TradeLogger.logClosePosition(stopLoss);
+                TradeLogger.logCloseLog(Strategy.MFI_BIG_GUY, stopLoss);
+            }
+
+            if (tp_sl.getTakeProfitOrder() != null && (takeProfit = requestSender.getMyTrade(strategyProps.getTicker(),
+                    tp_sl.getTakeProfitOrder().getOrderId())) != null) {
+                TradeLogger.logClosePosition(takeProfit);
+                TradeLogger.logCloseLog(Strategy.MFI_BIG_GUY, takeProfit);
+            }
+
+            tp_sl = null;
+        }
+    }
+
+    @Override
+    public void close() {
+        timer.cancel();
     }
 }
