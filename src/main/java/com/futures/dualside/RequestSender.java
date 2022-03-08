@@ -37,14 +37,6 @@ public class RequestSender {
         return openPositionMarket(symbol, OrderSide.SELL, marginType, PositionSide.SHORT, amount, leverage);
     }
 
-    public Order closeLongPositionMarket(String symbol) {
-        return closePositionMarket(symbol, PositionSide.LONG);
-    }
-
-    public Order closeShortPositionMarket(String symbol) {
-        return closePositionMarket(symbol, PositionSide.SHORT);
-    }
-
     public synchronized TP_SL postTP_SLOrders(String symbol, PositionSide positionSide, int takeProfitPercent, int stopLossPercent) {
         OrderSide orderSide = positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY;
         Position position = getPosition(symbol, positionSide);
@@ -97,33 +89,25 @@ public class RequestSender {
     }
 
     public synchronized Order closePositionMarket(String symbol, PositionSide positionSide) {
-        OrderSide orderSide = positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY;
-        Position position = getPosition(symbol, positionSide);
-
-        Order order = null;
-
-        if (position != null && position.getPositionAmt().compareTo(BigDecimal.ZERO) != 0) {
-            order =
-                    syncRequestClient.postOrder(
-                            symbol,
-                            orderSide,
-                            positionSide,
-                            OrderType.MARKET,
-                            null,
-                            position.getPositionAmt().toString(),
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            NewOrderRespType.ACK);
-        }
-
-        return order;
+        return syncRequestClient.postOrder(
+                symbol,
+                positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY,
+                positionSide,
+                OrderType.MARKET,
+                null,
+                Objects.requireNonNull(getExchangeInfoFilterValue(getExchangeInfo(symbol).getFilters(),
+                        FilterType.MARKET_LOT_SIZE,
+                        "maxQty")),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                NewOrderRespType.ACK);
     }
 
     public synchronized Order openPositionMarket(String symbol, OrderSide orderSide, MarginType marginType, PositionSide positionSide, Amount amount, int leverage){
