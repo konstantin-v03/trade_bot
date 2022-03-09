@@ -12,13 +12,16 @@ import com.utils.I18nSupport;
 import com.utils.TgBotUtils;
 import com.utils.Utils;
 import org.telegram.abilitybots.api.bot.AbilityBot;
+import org.telegram.abilitybots.api.bot.BaseAbilityBot;
 import org.telegram.abilitybots.api.objects.*;
 import org.telegram.abilitybots.api.toggle.CustomToggle;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class TelegramTradeBot extends AbilityBot {
@@ -253,7 +256,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .locality(Locality.USER)
                 .input(0)
                 .action(ctx -> silent.forceReply(I18nSupport.i18n_literals("process.signal.response"), ctx.chatId()))
-                .reply(upd -> tradeBot.process(upd.getMessage().getText()),
+                .reply((baseAbilityBot, update) -> tradeBot.process(update.getMessage().getText()),
                         Flag.MESSAGE,
                         Flag.REPLY,
                         TgBotUtils.isReplyToBot(getBotUsername()),

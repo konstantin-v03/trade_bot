@@ -18,7 +18,6 @@ public class TradeLogger {
     public static void logOpenPosition(Position position) {
         logTgBot(position != null ? I18nSupport.i18n_literals("position.open",
                 position.getPositionSide().equals("LONG") ? "\uD83D\uDCC8" : "\uD83D\uDCC9",
-                new Date(),
                 position.getSymbol(),
                 position.getPositionSide(),
                 position.getEntryPrice(),

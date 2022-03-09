@@ -7,7 +7,7 @@ import com.binance.client.model.market.ExchangeInfoEntry;
 import com.binance.client.model.market.MarkPrice;
 import com.binance.client.model.trade.*;
 import com.futures.Amount;
-import com.futures.FilterType;
+import com.futures.Filter;
 import com.futures.TP_SL;
 import org.jetbrains.annotations.NonNls;
 
@@ -96,8 +96,8 @@ public class RequestSender {
                 OrderType.MARKET,
                 null,
                 Objects.requireNonNull(getExchangeInfoFilterValue(getExchangeInfo(symbol).getFilters(),
-                        FilterType.MARKET_LOT_SIZE,
-                        "maxQty")),
+                        Filter.Type.MARKET_LOT_SIZE,
+                        Filter.Key.MAX_QTY.toString())),
                 null,
                 null,
                 null,
@@ -122,21 +122,21 @@ public class RequestSender {
         }
 
         BigDecimal quantity = Objects.requireNonNull(amountUSD).multiply(new BigDecimal(leverage)).divide(getLastPrice(symbol), new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(Objects.requireNonNull(exchangeInfoEntry).getFilters(),
-                FilterType.MARKET_LOT_SIZE,
-                "stepSize"))).scale(), RoundingMode.FLOOR);
+                Filter.Type.MARKET_LOT_SIZE,
+                Filter.Key.STEP_SIZE.toString()))).scale(), RoundingMode.FLOOR);
 
         List<PositionRisk> positionRisks = syncRequestClient.getPositionRisk(symbol);
         PositionRisk positionRisk = getPositionRisk(positionRisks, symbol, positionSide);
 
         if (positionRisk != null && quantity.compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
-                FilterType.MARKET_LOT_SIZE,
-                "minQty")))) >= 0 &&
+                Filter.Type.MARKET_LOT_SIZE,
+                Filter.Key.MIN_QTY.toString())))) >= 0 &&
                 quantity.compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
-                        FilterType.MARKET_LOT_SIZE,
-                        "maxQty")))) <= 0 &&
+                        Filter.Type.MARKET_LOT_SIZE,
+                        Filter.Key.MAX_QTY.toString())))) <= 0 &&
                 quantity.multiply(getLastPrice(symbol)).compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
-                        FilterType.MIN_NOTIONAL,
-                        "notional")))) >= 0) {
+                        Filter.Type.MIN_NOTIONAL,
+                        Filter.Key.NOTIONAL.toString())))) >= 0) {
 
             if (positionRisk.getLeverage().compareTo(new BigDecimal(leverage)) != 0) {
                 syncRequestClient.changeInitialLeverage(symbol, leverage);
@@ -244,7 +244,7 @@ public class RequestSender {
     }
 
     public String getExchangeInfoFilterValue(List<List<Map<String, String>>> exchangeInfoEntryFilters,
-                                              FilterType filterType,
+                                              Filter.Type filterType,
                                               String key) {
         List<Map<String, String>> temp;
 

@@ -1,5 +1,0 @@
-package com.futures;
-
-public enum FilterType {
-    LOT_SIZE, PRICE_FILTER, MARKET_LOT_SIZE, MAX_NUM_ORDERS, MAX_NUM_ALGO_ORDERS, MIN_NOTIONAL, PERCENT_PRICE
-}
