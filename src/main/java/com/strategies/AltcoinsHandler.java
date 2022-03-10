@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import static com.utils.Constants.INTERVAL_1h;
@@ -95,11 +96,11 @@ public class AltcoinsHandler extends StrategyHandler {
                         PositionSide.LONG));
             }
 
-            MyTrade myTrade = requestSender.getMyTrade(strategyProps.getTicker(),
+            List<MyTrade> myTrades = requestSender.getMyTrades(strategyProps.getTicker(),
                     requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.LONG).getOrderId());
 
-            TradeLogger.logClosePosition(myTrade);
-            TradeLogger.logCloseLog(Strategy.ALTCOINS, myTrade);
+            TradeLogger.logClosePosition(myTrades);
+            TradeLogger.logCloseLog(Strategy.ALTCOINS, myTrades);
         }
 
         if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) && shortPosition != null) {
@@ -109,11 +110,11 @@ public class AltcoinsHandler extends StrategyHandler {
                         PositionSide.SHORT));
             }
 
-            MyTrade myTrade = requestSender.getMyTrade(strategyProps.getTicker(),
+            List<MyTrade> myTrades = requestSender.getMyTrades(strategyProps.getTicker(),
                     requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.SHORT).getOrderId());
 
-            TradeLogger.logClosePosition(myTrade);
-            TradeLogger.logCloseLog(Strategy.ALTCOINS, myTrade);
+            TradeLogger.logClosePosition(myTrades);
+            TradeLogger.logCloseLog(Strategy.ALTCOINS, myTrades);
 
         }
 

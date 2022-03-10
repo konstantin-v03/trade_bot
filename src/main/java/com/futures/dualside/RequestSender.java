@@ -168,13 +168,13 @@ public class RequestSender {
         return null;
     }
 
-    public MyTrade getMyTrade(String symbol, Long orderId) {
+    public List<MyTrade> getMyTrades(String symbol, Long orderId) {
         List<MyTrade> myTrades = syncRequestClient.getAccountTrades(symbol, null, null, null, null)
                 .stream()
                 .filter(myTrade -> myTrade.getOrderId().equals(orderId))
                 .collect(Collectors.toList());
 
-        return myTrades.size() > 0 ? myTrades.get(0) : null;
+        return myTrades.size() > 0 ? myTrades : null;
     }
 
     public Position getPosition(String symbol, PositionSide positionSide) {

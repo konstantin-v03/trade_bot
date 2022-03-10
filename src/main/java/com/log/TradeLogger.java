@@ -5,11 +5,13 @@ import com.binance.client.model.trade.Position;
 import com.futures.TP_SL;
 import com.strategies.Strategy;
 import com.tgbot.AsyncSender;
+import com.utils.Calculations;
 import com.utils.I18nSupport;
 import com.utils.Utils;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 public class TradeLogger {
     public static AsyncSender asyncSender;
@@ -24,14 +26,16 @@ public class TradeLogger {
                 new Date()) : I18nSupport.i18n_literals("position.not.open", "Position = null!"));
     }
 
-    public static void logClosePosition(MyTrade myTrade) {
+    public static void logClosePosition(List<MyTrade> myTrades) {
+        MyTrade myTrade = myTrades.get(0);
+
         logTgBot(myTrade != null ?
                 I18nSupport.i18n_literals("position.close",
                         myTrade.getSymbol(),
                         myTrade.getPositionSide(),
                         myTrade.getPrice(),
                         new Date(myTrade.getTime()),
-                        myTrade.getRealizedPnl()) :
+                        Calculations.calcTotalRealizedPnl(myTrades)) :
                 I18nSupport.i18n_literals("position.not.close", "MyTrade = null!"));
     }
 
@@ -65,13 +69,15 @@ public class TradeLogger {
         }
     }
 
-    public static void logCloseLog(Strategy strategy, MyTrade myTrade) {
+    public static void logCloseLog(Strategy strategy, List<MyTrade> myTrades) {
+        MyTrade myTrade = myTrades.get(0);
+
         try {
             Utils.appendStrToFile(Utils.getLogFileName(strategy, myTrade.getSymbol()),
                     I18nSupport.i18n_literals("file.close.log",
                             new Date(myTrade.getTime()),
                             myTrade.getSymbol(),
-                            myTrade.getRealizedPnl()));
+                            Calculations.calcTotalRealizedPnl(myTrades)));
         } catch (IOException ioException) {
             logException(ioException);
         }

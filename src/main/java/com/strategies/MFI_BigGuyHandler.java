@@ -99,16 +99,16 @@ public class MFI_BigGuyHandler extends StrategyHandler {
     }
 
     private void logTP_SL() {
-        MyTrade stopLoss, takeProfit;
+        List<MyTrade> stopLoss, takeProfit;
 
         synchronized (lock) {
-            if (tp_sl.getStopLossOrder() != null && (stopLoss = requestSender.getMyTrade(strategyProps.getTicker(),
+            if (tp_sl.getStopLossOrder() != null && (stopLoss = requestSender.getMyTrades(strategyProps.getTicker(),
                     tp_sl.getStopLossOrder().getOrderId())) != null) {
                 TradeLogger.logClosePosition(stopLoss);
                 TradeLogger.logCloseLog(Strategy.MFI_BIG_GUY, stopLoss);
             }
 
-            if (tp_sl.getTakeProfitOrder() != null && (takeProfit = requestSender.getMyTrade(strategyProps.getTicker(),
+            if (tp_sl.getTakeProfitOrder() != null && (takeProfit = requestSender.getMyTrades(strategyProps.getTicker(),
                     tp_sl.getTakeProfitOrder().getOrderId())) != null) {
                 TradeLogger.logClosePosition(takeProfit);
                 TradeLogger.logCloseLog(Strategy.MFI_BIG_GUY, takeProfit);

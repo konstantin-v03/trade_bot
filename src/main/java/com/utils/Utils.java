@@ -1,7 +1,6 @@
 package com.utils;
 
 import java.io.*;
-import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
@@ -69,12 +68,5 @@ public class Utils {
         return (calendar.get(Calendar.HOUR_OF_DAY) *
                 DateUtils.MINUTES_IN_HOUR +
                 calendar.get(Calendar.MINUTE)) / interval;
-    }
-
-    public static BigDecimal percentToBigDecimal(String string) throws IllegalArgumentException {
-        String subString = string.substring(0, string.length() - 1);
-        char lastChr = string.charAt(string.length() - 1);
-
-        return lastChr == '%' ? new BigDecimal(subString) : null;
     }
 }

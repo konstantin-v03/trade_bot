@@ -12,16 +12,13 @@ import com.utils.I18nSupport;
 import com.utils.TgBotUtils;
 import com.utils.Utils;
 import org.telegram.abilitybots.api.bot.AbilityBot;
-import org.telegram.abilitybots.api.bot.BaseAbilityBot;
 import org.telegram.abilitybots.api.objects.*;
 import org.telegram.abilitybots.api.toggle.CustomToggle;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
-import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class TelegramTradeBot extends AbilityBot {
@@ -121,7 +118,7 @@ public class TelegramTradeBot extends AbilityBot {
                         order = requestSender.closePositionMarket(ctx.firstArg(), positionSide);
                     }
 
-                    TradeLogger.logClosePosition(order != null ? requestSender.getMyTrade(ctx.firstArg(), order.getOrderId()) : null);
+                    TradeLogger.logClosePosition(order != null ? requestSender.getMyTrades(ctx.firstArg(), order.getOrderId()) : null);
                     TradeLogger.logTgBot(requestSender.cancelOrders(ctx.firstArg()).getMsg());
                 })
                 .build();
