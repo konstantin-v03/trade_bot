@@ -77,7 +77,7 @@ public class TradeLogger {
                     I18nSupport.i18n_literals("file.close.log",
                             new Date(myTrade.getTime()),
                             myTrade.getSymbol(),
-                            Calculations.calcTotalRealizedPnl(myTrades)));
+                            Calculations.calcTotalRealizedPnl(myTrades)) + "\n");
         } catch (IOException ioException) {
             logException(ioException);
         }

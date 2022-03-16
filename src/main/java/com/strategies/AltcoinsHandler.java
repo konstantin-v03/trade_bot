@@ -4,6 +4,7 @@ import com.binance.client.model.enums.MarginType;
 import com.binance.client.model.enums.OrderSide;
 import com.binance.client.model.enums.PositionSide;
 import com.binance.client.model.trade.MyTrade;
+import com.binance.client.model.trade.Order;
 import com.binance.client.model.trade.Position;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
@@ -11,6 +12,7 @@ import com.signal.PIFAGOR_ALTCOINS_SIGNAL;
 import com.signal.Signal;
 import com.utils.Constants;
 import com.utils.I18nSupport;
+import com.utils.Utils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -89,34 +91,23 @@ public class AltcoinsHandler extends StrategyHandler {
         Position longPosition = requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG);
         Position shortPosition = requestSender.getPosition(strategyProps.getTicker(), PositionSide.SHORT);
 
-        if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.SELL) && longPosition != null) {
+        Order closePositionOrder = null;
+
+        if ((pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.SELL) && longPosition != null) ||
+                (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) && shortPosition != null)) {
+            PositionSide positionSide = PIFAGOR_ALTCOINS_SIGNAL.Action.SELL.equals(pifagorAltcoinsSignal.getAction()) ?
+                    PositionSide.LONG : PositionSide.SHORT;
+
             if (strategyProps.isDebugMode()) {
                 TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.try.close.debug",
                         strategyProps.getTicker(),
-                        PositionSide.LONG));
+                        positionSide));
             }
 
-            List<MyTrade> myTrades = requestSender.getMyTrades(strategyProps.getTicker(),
-                    requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.LONG).getOrderId());
-
-            TradeLogger.logClosePosition(myTrades);
-            TradeLogger.logCloseLog(Strategy.ALTCOINS, myTrades);
+            closePositionOrder = requestSender.closePositionMarket(strategyProps.getTicker(), positionSide);
         }
 
-        if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) && shortPosition != null) {
-            if (strategyProps.isDebugMode()) {
-                TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.try.close.debug",
-                        strategyProps.getTicker(),
-                        PositionSide.SHORT));
-            }
-
-            List<MyTrade> myTrades = requestSender.getMyTrades(strategyProps.getTicker(),
-                    requestSender.closePositionMarket(strategyProps.getTicker(), PositionSide.SHORT).getOrderId());
-
-            TradeLogger.logClosePosition(myTrades);
-            TradeLogger.logCloseLog(Strategy.ALTCOINS, myTrades);
-
-        }
+        boolean isOpen = false;
 
         if (pifagorAltcoinsSignal1h != null &&
                 pifagorAltcoinsSignal4h != null &&
@@ -142,10 +133,22 @@ public class AltcoinsHandler extends StrategyHandler {
                         strategyProps.getAmount(),
                         strategyProps.getLeverage());
 
-                TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(),
-                        pifagorAltcoinsSignal1h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
-                                PositionSide.LONG : PositionSide.SHORT));
+                isOpen = true;
             }
+        }
+
+        if (isOpen) {
+            Utils.sleep(1000);
+            TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(),
+                    pifagorAltcoinsSignal1h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
+                            PositionSide.LONG : PositionSide.SHORT));
+        }
+
+        if (closePositionOrder != null) {
+            Utils.sleep(1000);
+            List<MyTrade> myTrades = requestSender.getMyTrades(strategyProps.getTicker(), closePositionOrder.getOrderId());
+            TradeLogger.logClosePosition(myTrades);
+            TradeLogger.logCloseLog(Strategy.ALTCOINS, myTrades);
         }
     }
 

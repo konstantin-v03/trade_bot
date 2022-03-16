@@ -69,4 +69,12 @@ public class Utils {
                 DateUtils.MINUTES_IN_HOUR +
                 calendar.get(Calendar.MINUTE)) / interval;
     }
+
+    public static void sleep(long delay) {
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException ignored) {
+
+        }
+    }
 }

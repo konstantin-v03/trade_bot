@@ -11,6 +11,7 @@ import com.signal.PIFAGOR_KHALIFA_Signal;
 import com.signal.PIFAGOR_MFI_Signal;
 import com.signal.Signal;
 import com.utils.I18nSupport;
+import com.utils.Utils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -84,7 +85,6 @@ public class MFI_BigGuyHandler extends StrategyHandler {
             if (position == null) {
                 requestSender.openLongPositionMarket(strategyProps.getTicker(), MarginType.ISOLATED, strategyProps.getAmount(), strategyProps.getLeverage());
                 requestSender.cancelOrders(strategyProps.getTicker());
-                TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG));
 
                 synchronized (lock) {
                     TradeLogger.logTP_SLOrders(tp_sl = requestSender.postTP_SLOrders(strategyProps.getTicker(),
@@ -92,6 +92,9 @@ public class MFI_BigGuyHandler extends StrategyHandler {
                             strategyProps.getTakeProfit(),
                             strategyProps.getStopLoss()));
                 }
+
+                Utils.sleep(1000);
+                TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG));
             } else {
                 TradeLogger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.LONG, position.getEntryPrice()));
             }
