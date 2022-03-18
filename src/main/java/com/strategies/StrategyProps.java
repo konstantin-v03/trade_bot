@@ -11,18 +11,14 @@ public class StrategyProps {
     private final String ticker;
     private final Amount amount;
     private final int leverage;
-    private final int takeProfit;
-    private final int stopLoss;
     private final boolean debugMode;
     private final Properties properties;
 
-    public StrategyProps(Strategy strategy, String ticker, Amount amount, int leverage, int takeProfit, int stopLoss, boolean debugMode, String propertiesString) {
+    public StrategyProps(Strategy strategy, String ticker, Amount amount, int leverage, boolean debugMode, String propertiesString) {
         this.strategy = strategy;
         this.ticker = ticker;
         this.amount = amount;
         this.leverage = leverage;
-        this.takeProfit = takeProfit;
-        this.stopLoss = stopLoss;
         this.debugMode = debugMode;
 
         Properties properties = null;
@@ -58,14 +54,6 @@ public class StrategyProps {
 
     public int getLeverage() {
         return leverage;
-    }
-
-    public int getTakeProfit() {
-        return takeProfit;
-    }
-
-    public int getStopLoss() {
-        return stopLoss;
     }
 
     public boolean isDebugMode() {

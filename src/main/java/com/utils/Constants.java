@@ -7,4 +7,7 @@ public class Constants {
 
     public static final String INTERVAL_1H_STR = "1h";
     public static final String INTERVAL_4H_STR = "4h";
+
+    public static final String TAKE_PROFIT_STR = "takeProfit";
+    public static final String STOP_LOSS_STR = "stopLoss";
 }

@@ -10,6 +10,7 @@ import com.log.TradeLogger;
 import com.signal.PIFAGOR_KHALIFA_Signal;
 import com.signal.PIFAGOR_MFI_Signal;
 import com.signal.Signal;
+import com.utils.Constants;
 import com.utils.I18nSupport;
 import com.utils.Utils;
 import org.json.JSONException;
@@ -20,10 +21,14 @@ import java.util.*;
 import static com.utils.Constants.INTERVAL_5m;
 import static com.utils.Utils.getCandlestickIndex;
 
+@Deprecated
 public class MFI_BigGuyHandler extends StrategyHandler {
 
     private PIFAGOR_MFI_Signal pifagorMfiSignal;
     private PIFAGOR_KHALIFA_Signal pifagorKhalifaSignal;
+
+    private final int takeProfit;
+    private final int stopLoss;
 
     private final Object lock = new Object();
     private TP_SL tp_sl;
@@ -32,6 +37,12 @@ public class MFI_BigGuyHandler extends StrategyHandler {
 
     public MFI_BigGuyHandler(RequestSender requestSender, StrategyProps strategyProps) throws IllegalArgumentException {
         super(requestSender, strategyProps);
+
+        Properties properties = strategyProps.getProperties();
+
+        takeProfit = Integer.parseInt(properties.getProperty(Constants.TAKE_PROFIT_STR));
+        stopLoss = Integer.parseInt(properties.getProperty(Constants.STOP_LOSS_STR));
+
 
         timer.schedule(new TimerTask() {
             public void run() {
@@ -89,8 +100,8 @@ public class MFI_BigGuyHandler extends StrategyHandler {
                 synchronized (lock) {
                     TradeLogger.logTP_SLOrders(tp_sl = requestSender.postTP_SLOrders(strategyProps.getTicker(),
                             PositionSide.LONG,
-                            strategyProps.getTakeProfit(),
-                            strategyProps.getStopLoss()));
+                            takeProfit,
+                            stopLoss));
                 }
 
                 Utils.sleep(1000);

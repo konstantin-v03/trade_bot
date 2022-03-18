@@ -27,9 +27,9 @@ public class TradeLogger {
     }
 
     public static void logClosePosition(List<MyTrade> myTrades) {
-        MyTrade myTrade = myTrades.get(0);
+        MyTrade myTrade;
 
-        logTgBot(myTrade != null ?
+        logTgBot(myTrades != null && (myTrade = myTrades.get(0)) != null ?
                 I18nSupport.i18n_literals("position.close",
                         myTrade.getSymbol(),
                         myTrade.getPositionSide(),
@@ -70,16 +70,20 @@ public class TradeLogger {
     }
 
     public static void logCloseLog(Strategy strategy, List<MyTrade> myTrades) {
-        MyTrade myTrade = myTrades.get(0);
-
         try {
+            if (myTrades == null || myTrades.size() <= 0) {
+                throw new IllegalArgumentException("List<MyTrade> equals to null or size less than 1!");
+            }
+
+            MyTrade myTrade = myTrades.get(0);
+
             Utils.appendStrToFile(Utils.getLogFileName(strategy, myTrade.getSymbol()),
                     I18nSupport.i18n_literals("file.close.log",
                             new Date(myTrade.getTime()),
                             myTrade.getSymbol(),
                             Calculations.calcTotalRealizedPnl(myTrades)) + "\n");
-        } catch (IOException ioException) {
-            logException(ioException);
+        } catch (IOException|IllegalArgumentException exception) {
+            logException(exception);
         }
     }
 }

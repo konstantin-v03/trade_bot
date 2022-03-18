@@ -130,7 +130,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .info(I18nSupport.i18n_literals("enable.strategy.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
-                .input(8)
+                .input(6)
                 .action(ctx -> {
                     try {
                         Strategy strategy = Strategy.valueOf(ctx.firstArg());
@@ -139,18 +139,19 @@ public class TelegramTradeBot extends AbilityBot {
                                 ctx.secondArg(),
                                 new Amount(ctx.thirdArg()),
                                 Integer.parseInt(ctx.arguments()[3]),
-                                Integer.parseInt(ctx.arguments()[4]),
-                                Integer.parseInt(ctx.arguments()[5]),
-                                Boolean.parseBoolean(ctx.arguments()[6]),
-                                ctx.arguments()[7]);
+                                Boolean.parseBoolean(ctx.arguments()[4]),
+                                ctx.arguments()[5]);
 
                         if (strategy.equals(Strategy.MFI_BIG_GUY)) {
                             tradeBot.enabledStrategies.put(ctx.secondArg(),
                                     new MFI_BigGuyHandler(requestSender, strategyProps));
+                        } else if (strategy.equals(Strategy.ALTCOINS_1h_4h)) {
+                            tradeBot.enabledStrategies.put(ctx.secondArg(),
+                                    new Altcoins1h4hHandler(requestSender, strategyProps));
                         } else if (strategy.equals(Strategy.ALTCOINS)) {
                             tradeBot.enabledStrategies.put(ctx.secondArg(),
                                     new AltcoinsHandler(requestSender, strategyProps));
-                        } else {
+                        } else{
                             throw new IllegalArgumentException("Strategy is not supported!");
                         }
 
@@ -212,8 +213,6 @@ public class TelegramTradeBot extends AbilityBot {
                                     strategyProps.getStrategy(),
                                     strategyProps.getAmount().toString(),
                                     strategyProps.getLeverage(),
-                                    strategyProps.getTakeProfit(),
-                                    strategyProps.getStopLoss(),
                                     strategyProps.isDebugMode() ? 0 : 1);
                         }).collect(Collectors.joining("\n\n")))))
                 .build();
