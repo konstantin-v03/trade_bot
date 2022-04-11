@@ -4,6 +4,7 @@ import com.binance.client.model.enums.MarginType;
 import com.binance.client.model.enums.PositionSide;
 import com.binance.client.model.trade.MyTrade;
 import com.binance.client.model.trade.Position;
+import com.futures.Amount;
 import com.futures.TP_SL;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
@@ -23,10 +24,11 @@ import static com.utils.Utils.getCandlestickIndex;
 
 @Deprecated
 public class MFI_BigGuyHandler extends StrategyHandler {
-
     private PIFAGOR_MFI_Signal pifagorMfiSignal;
     private PIFAGOR_KHALIFA_Signal pifagorKhalifaSignal;
 
+    private final Amount amount;
+    private final int leverage;
     private final int takeProfit;
     private final int stopLoss;
 
@@ -40,9 +42,10 @@ public class MFI_BigGuyHandler extends StrategyHandler {
 
         Properties properties = strategyProps.getProperties();
 
+        amount = new Amount(properties.getProperty(Constants.AMOUNT_STR));
+        leverage = Integer.parseInt(properties.getProperty(Constants.LEVERAGE_STR));
         takeProfit = Integer.parseInt(properties.getProperty(Constants.TAKE_PROFIT_STR));
         stopLoss = Integer.parseInt(properties.getProperty(Constants.STOP_LOSS_STR));
-
 
         timer.schedule(new TimerTask() {
             public void run() {
@@ -94,7 +97,7 @@ public class MFI_BigGuyHandler extends StrategyHandler {
             Position position = requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG);
 
             if (position == null) {
-                requestSender.openLongPositionMarket(strategyProps.getTicker(), MarginType.ISOLATED, strategyProps.getAmount(), strategyProps.getLeverage());
+                requestSender.openLongPositionMarket(strategyProps.getTicker(), MarginType.ISOLATED, amount, leverage);
                 requestSender.cancelOrders(strategyProps.getTicker());
 
                 synchronized (lock) {

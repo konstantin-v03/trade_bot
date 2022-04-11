@@ -6,6 +6,7 @@ import com.binance.client.model.enums.PositionSide;
 import com.binance.client.model.trade.MyTrade;
 import com.binance.client.model.trade.Order;
 import com.binance.client.model.trade.Position;
+import com.futures.Amount;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
 import com.signal.PIFAGOR_ALTCOINS_SIGNAL;
@@ -28,11 +29,17 @@ public class Altcoins1h4hHandler extends StrategyHandler {
     private PIFAGOR_ALTCOINS_SIGNAL pifagorAltcoinsSignal1h;
     private PIFAGOR_ALTCOINS_SIGNAL pifagorAltcoinsSignal4h;
 
-    public Altcoins1h4hHandler(RequestSender requestSender, StrategyProps strategyProps) {
+    private final Amount amount;
+    private final int leverage;
+
+    public Altcoins1h4hHandler(RequestSender requestSender, StrategyProps strategyProps) throws IllegalArgumentException{
         super(requestSender, strategyProps);
 
         Properties properties = strategyProps.getProperties();
         String action1hStr, action4hStr;
+
+        amount = new Amount(strategyProps.getProperties().getProperty(Constants.AMOUNT_STR));
+        leverage = Integer.parseInt(strategyProps.getProperties().getProperty(Constants.LEVERAGE_STR));
 
         if (properties != null && (action1hStr = properties.getProperty(Constants.INTERVAL_1H_STR)) != null &&
                 (action4hStr = properties.getProperty(Constants.INTERVAL_4H_STR)) != null) {
@@ -131,8 +138,8 @@ public class Altcoins1h4hHandler extends StrategyHandler {
                         MarginType.ISOLATED,
                         pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
                                 PositionSide.LONG : PositionSide.SHORT,
-                        strategyProps.getAmount(),
-                        strategyProps.getLeverage());
+                        amount,
+                        leverage);
 
                 isOpen = true;
             }

@@ -1,9 +1,7 @@
 package com.utils;
 
 import java.io.*;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Properties;
+import java.util.*;
 
 import com.strategies.Strategy;
 import com.sun.net.httpserver.HttpExchange;
@@ -16,8 +14,10 @@ public class Utils {
         out.close();
     }
 
-    public static String getLogFileName(Strategy strategy, String ticker) {
-        return strategy + "_" + ticker + ".txt";
+    public static List<String> getLogFileNames(Strategy strategy, String ticker) {
+        List<String> logFileNames = new ArrayList<>();
+        logFileNames.add(strategy + "_" + ticker + ".txt");
+        return logFileNames;
     }
 
     public static String readAllFromInputStream(InputStream inputStream) {

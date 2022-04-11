@@ -6,12 +6,12 @@ import static com.utils.Calculations.ONE_HUNDRED;
 import static com.utils.Calculations.percentage;
 
 public class Amount {
-    public enum TYPE {
+    public enum Type {
         PERCENT, USD
     }
 
     private final BigDecimal amount;
-    private final TYPE type;
+    private final Type type;
 
     public Amount(String amount) throws IllegalArgumentException {
         String subString = amount.substring(0, amount.length() - 1);
@@ -19,7 +19,7 @@ public class Amount {
 
         switch (lastChr) {
             case '%':
-                type = TYPE.PERCENT;
+                type = Type.PERCENT;
                 this.amount = new BigDecimal(subString);
 
                 if (this.amount.compareTo(ONE_HUNDRED) > 0 || this.amount.compareTo(BigDecimal.ONE) < 0) {
@@ -27,7 +27,7 @@ public class Amount {
                 }
                 break;
             case '$':
-                type = TYPE.USD;
+                type = Type.USD;
                 this.amount = new BigDecimal(subString);
                 break;
             default:
@@ -35,7 +35,7 @@ public class Amount {
         }
     }
 
-    public Amount(BigDecimal amount, TYPE type) {
+    public Amount(BigDecimal amount, Type type) {
         this.amount = amount;
         this.type = type;
     }
@@ -44,7 +44,7 @@ public class Amount {
         return amount;
     }
 
-    public TYPE getType() {
+    public Type getType() {
         return type;
     }
 
@@ -54,6 +54,6 @@ public class Amount {
 
     @Override
     public String toString() {
-        return amount.toString() + (type.equals(TYPE.PERCENT) ? "%" : "$");
+        return amount.toString() + (type.equals(Type.PERCENT) ? "%" : "$");
     }
 }

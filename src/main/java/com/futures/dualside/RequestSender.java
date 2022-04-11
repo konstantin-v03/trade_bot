@@ -115,9 +115,9 @@ public class RequestSender {
 
         BigDecimal amountUSD = null;
 
-        if (amount.getType().equals(Amount.TYPE.PERCENT)) {
+        if (amount.getType().equals(Amount.Type.PERCENT)) {
             amountUSD = Amount.getAmountUSD(amount.getAmount(), Objects.requireNonNull(getAvailableBalance(getAssetBySymbol(symbol))));
-        } else if (amount.getType().equals(Amount.TYPE.USD)){
+        } else if (amount.getType().equals(Amount.Type.USD)){
             amountUSD = amount.getAmount();
         }
 

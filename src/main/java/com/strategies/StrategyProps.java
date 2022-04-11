@@ -1,7 +1,5 @@
 package com.strategies;
 
-import com.futures.Amount;
-
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -9,16 +7,12 @@ import java.util.stream.Collectors;
 public class StrategyProps {
     private final Strategy strategy;
     private final String ticker;
-    private final Amount amount;
-    private final int leverage;
     private final boolean debugMode;
     private final Properties properties;
 
-    public StrategyProps(Strategy strategy, String ticker, Amount amount, int leverage, boolean debugMode, String propertiesString) {
+    public StrategyProps(Strategy strategy, String ticker,boolean debugMode, String propertiesString) {
         this.strategy = strategy;
         this.ticker = ticker;
-        this.amount = amount;
-        this.leverage = leverage;
         this.debugMode = debugMode;
 
         Properties properties = null;
@@ -46,14 +40,6 @@ public class StrategyProps {
 
     public String getTicker() {
         return ticker;
-    }
-
-    public Amount getAmount() {
-        return amount;
-    }
-
-    public int getLeverage() {
-        return leverage;
     }
 
     public boolean isDebugMode() {

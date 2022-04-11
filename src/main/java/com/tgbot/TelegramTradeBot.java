@@ -6,6 +6,7 @@ import com.binance.client.model.trade.Order;
 import com.futures.Amount;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
+import com.signal.ALARM_SIGNAL;
 import com.strategies.*;
 import com.tradebot.TradeBot;
 import com.utils.I18nSupport;
@@ -19,6 +20,7 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class TelegramTradeBot extends AbilityBot {
@@ -130,17 +132,15 @@ public class TelegramTradeBot extends AbilityBot {
                 .info(I18nSupport.i18n_literals("enable.strategy.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
-                .input(6)
+                .input(4)
                 .action(ctx -> {
                     try {
                         Strategy strategy = Strategy.valueOf(ctx.firstArg());
 
                         StrategyProps strategyProps = new StrategyProps(strategy,
                                 ctx.secondArg(),
-                                new Amount(ctx.thirdArg()),
-                                Integer.parseInt(ctx.arguments()[3]),
-                                Boolean.parseBoolean(ctx.arguments()[4]),
-                                ctx.arguments()[5]);
+                                Boolean.parseBoolean(ctx.arguments()[2]),
+                                ctx.arguments()[3]);
 
                         if (strategy.equals(Strategy.MFI_BIG_GUY)) {
                             tradeBot.enabledStrategies.put(ctx.secondArg(),
@@ -151,7 +151,10 @@ public class TelegramTradeBot extends AbilityBot {
                         } else if (strategy.equals(Strategy.ALTCOINS)) {
                             tradeBot.enabledStrategies.put(ctx.secondArg(),
                                     new AltcoinsHandler(requestSender, strategyProps));
-                        } else{
+                        } else if (strategy.equals(Strategy.ALARM)) {
+                            tradeBot.enabledStrategies.put(ctx.secondArg(),
+                                    new AlarmHandler(requestSender, strategyProps));
+                        } else {
                             throw new IllegalArgumentException("Strategy is not supported!");
                         }
 
@@ -211,8 +214,6 @@ public class TelegramTradeBot extends AbilityBot {
                             return I18nSupport.i18n_literals("enabled.strategy",
                                     strategyProps.getTicker(),
                                     strategyProps.getStrategy(),
-                                    strategyProps.getAmount().toString(),
-                                    strategyProps.getLeverage(),
                                     strategyProps.isDebugMode() ? 0 : 1);
                         }).collect(Collectors.joining("\n\n")))))
                 .build();
@@ -223,7 +224,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .name(I18nSupport.i18n_literals("get.log"))
                 .info(I18nSupport.i18n_literals("get.log.info"))
                 .privacy(Privacy.CREATOR)
-                .locality(Locality.USER)
+                .locality(Locality.ALL)
                 .input(2)
                 .action(ctx -> {
                     Strategy strategy;
@@ -235,11 +236,23 @@ public class TelegramTradeBot extends AbilityBot {
                         return;
                     }
 
-                    executeAsync(SendDocument
-                            .builder()
-                            .chatId(String.valueOf(ctx.chatId()))
-                            .document(new InputFile().setMedia(new File(Utils.getLogFileName(strategy, ctx.secondArg()))))
-                            .build());
+                    List<String> logFileNames;
+
+                    if (strategy.equals(Strategy.ALARM)) {
+                        logFileNames = Arrays.stream(ALARM_SIGNAL.Indicator.values())
+                                .map(AlarmHandler::getOncePerMinuteCountLogFileName)
+                                .collect(Collectors.toList());
+                    } else {
+                        logFileNames = Utils.getLogFileNames(strategy, ctx.secondArg());
+                    }
+
+                    for (String logFileName : logFileNames) {
+                        executeAsync(SendDocument
+                                .builder()
+                                .chatId(String.valueOf(ctx.chatId()))
+                                .document(new InputFile().setMedia(new File(logFileName)))
+                                .build());
+                    }
                 })
                 .build();
     }
@@ -258,6 +271,17 @@ public class TelegramTradeBot extends AbilityBot {
                         TgBotUtils.isReplyToBot(getBotUsername()),
                         TgBotUtils.isReplyToMessage(I18nSupport.i18n_literals("process.signal.response"))
                 )
+                .build();
+    }
+
+    public Ability initLogChat() {
+        return Ability.builder()
+                .name(I18nSupport.i18n_literals("initlogchat"))
+                .info(I18nSupport.i18n_literals("initlogchat.info"))
+                .privacy(Privacy.CREATOR)
+                .locality(Locality.ALL)
+                .input(0)
+                .action(ctx -> TradeLogger.chatId = ctx.chatId())
                 .build();
     }
 }

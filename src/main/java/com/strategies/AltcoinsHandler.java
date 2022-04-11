@@ -6,10 +6,12 @@ import com.binance.client.model.enums.PositionSide;
 import com.binance.client.model.trade.MyTrade;
 import com.binance.client.model.trade.Order;
 import com.binance.client.model.trade.Position;
+import com.futures.Amount;
 import com.futures.dualside.RequestSender;
 import com.log.TradeLogger;
 import com.signal.PIFAGOR_ALTCOINS_SIGNAL;
 import com.signal.Signal;
+import com.utils.Constants;
 import com.utils.I18nSupport;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,8 +19,14 @@ import org.json.JSONObject;
 import java.util.List;
 
 public class AltcoinsHandler extends StrategyHandler {
-    public AltcoinsHandler(RequestSender requestSender, StrategyProps strategyProps) {
+    private final Amount amount;
+    private final int leverage;
+
+    public AltcoinsHandler(RequestSender requestSender, StrategyProps strategyProps) throws IllegalArgumentException {
         super(requestSender, strategyProps);
+
+        amount = new Amount(strategyProps.getProperties().getProperty(Constants.AMOUNT_STR));
+        leverage = Integer.parseInt(strategyProps.getProperties().getProperty(Constants.LEVERAGE_STR));
     }
 
     @Override
@@ -49,8 +57,8 @@ public class AltcoinsHandler extends StrategyHandler {
                 MarginType.ISOLATED,
                 pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
                         PositionSide.LONG : PositionSide.SHORT,
-                strategyProps.getAmount(),
-                strategyProps.getLeverage());
+                amount,
+                leverage);
 
         List<MyTrade> myTrades = closePositionOrder != null ? requestSender.getMyTrades(strategyProps.getTicker(),
                 closePositionOrder.getOrderId()) : null;

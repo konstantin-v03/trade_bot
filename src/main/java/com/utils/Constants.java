@@ -10,4 +10,6 @@ public class Constants {
 
     public static final String TAKE_PROFIT_STR = "takeProfit";
     public static final String STOP_LOSS_STR = "stopLoss";
+    public static final String AMOUNT_STR = "amount";
+    public static final String LEVERAGE_STR = "leverage";
 }

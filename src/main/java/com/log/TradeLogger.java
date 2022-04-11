@@ -69,6 +69,12 @@ public class TradeLogger {
         }
     }
 
+    public static void log$pinTgBot(String log) {
+        if (asyncSender != null && chatId != null) {
+            asyncSender.send$pinTextMsg(log, chatId, "HTML");
+        }
+    }
+
     public static void logCloseLog(Strategy strategy, List<MyTrade> myTrades) {
         try {
             if (myTrades == null || myTrades.size() <= 0) {
@@ -77,7 +83,7 @@ public class TradeLogger {
 
             MyTrade myTrade = myTrades.get(0);
 
-            Utils.appendStrToFile(Utils.getLogFileName(strategy, myTrade.getSymbol()),
+            Utils.appendStrToFile(Utils.getLogFileNames(strategy, myTrade.getSymbol()).get(0),
                     I18nSupport.i18n_literals("file.close.log",
                             new Date(myTrade.getTime()),
                             myTrade.getSymbol(),
