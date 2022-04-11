@@ -21,6 +21,7 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class TelegramTradeBot extends AbilityBot {
@@ -281,7 +282,10 @@ public class TelegramTradeBot extends AbilityBot {
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.ALL)
                 .input(0)
-                .action(ctx -> TradeLogger.chatId = ctx.chatId())
+                .action(ctx -> {
+                    TradeLogger.chatId = ctx.chatId();
+                    TradeLogger.logTgBot(I18nSupport.i18n_literals("log.chat.added"));
+                })
                 .build();
     }
 }

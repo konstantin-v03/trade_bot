@@ -36,7 +36,7 @@ public abstract class Signal {
         ticker = jsonObject.getString(I18nSupport.i18n_literals("ticker"));
         exchange = jsonObject.getString(I18nSupport.i18n_literals("exchange"));
         close = jsonObject.getBigDecimal(I18nSupport.i18n_literals("close"));
-        interval = jsonObject.getInt(I18nSupport.i18n_literals("interval"));
+        interval = Utils.intervalToInt(jsonObject.getString(I18nSupport.i18n_literals("interval")));
         time = Date.from(Instant.parse(jsonObject.getString(I18nSupport.i18n_literals("instant"))));
     }
 

@@ -70,6 +70,26 @@ public class Utils {
                 calendar.get(Calendar.MINUTE)) / interval;
     }
 
+    public static int intervalToInt(String intervalStr) {
+        int interval = -1;
+
+        try {
+            interval = Integer.parseInt(intervalStr);
+        } catch (IllegalArgumentException illegalArgumentException) {
+            if (intervalStr.equalsIgnoreCase("D")) {
+                return 24 * 60;
+            } else if (intervalStr.equalsIgnoreCase("12h")) {
+                return 12 * 60;
+            } else if (intervalStr.equalsIgnoreCase("4h")) {
+                return 4 * 60;
+            } else if (intervalStr.equalsIgnoreCase("h")) {
+                return 60;
+            }
+        }
+
+        return interval;
+    }
+
     public static void sleep(long delay) {
         try {
             Thread.sleep(delay);
