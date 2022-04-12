@@ -14,10 +14,15 @@ import java.util.Date;
 import java.util.List;
 
 public class TradeLogger {
-    public static AsyncSender asyncSender;
-    public static Long chatId = null;
+    public final AsyncSender asyncSender;
+    private Long logChatId;
 
-    public static void logOpenPosition(Position position) {
+    public TradeLogger(AsyncSender asyncSender, Long logChatId) {
+        this.asyncSender = asyncSender;
+        this.logChatId = logChatId;
+    }
+
+    public void logOpenPosition(Position position) {
         logTgBot(position != null ? I18nSupport.i18n_literals("position.open",
                 position.getPositionSide().equals("LONG") ? "\uD83D\uDCC8" : "\uD83D\uDCC9",
                 position.getSymbol(),
@@ -26,7 +31,7 @@ public class TradeLogger {
                 new Date()) : I18nSupport.i18n_literals("position.not.open", "Position = null!"));
     }
 
-    public static void logClosePosition(List<MyTrade> myTrades) {
+    public void logClosePosition(List<MyTrade> myTrades) {
         MyTrade myTrade;
 
         logTgBot(myTrades != null && (myTrade = myTrades.get(0)) != null ?
@@ -39,7 +44,7 @@ public class TradeLogger {
                 I18nSupport.i18n_literals("position.not.close", "MyTrade = null!"));
     }
 
-    public static void logTP_SLOrders(TP_SL tp_sl) {
+    public void logTP_SLOrders(TP_SL tp_sl) {
         boolean isPost = false;
 
         if (tp_sl != null) {
@@ -59,23 +64,23 @@ public class TradeLogger {
         }
     }
 
-    public static void logException(Exception exception) {
+    public void logException(Exception exception) {
         logTgBot(I18nSupport.i18n_literals("error.occured", exception));
     }
 
-    public static void logTgBot(String log) {
-        if (asyncSender != null && chatId != null) {
-            asyncSender.sendTextMsgAsync(log, chatId, "HTML");
+    public void logTgBot(String log) {
+        if (asyncSender != null && logChatId != null) {
+            asyncSender.sendTextMsgAsync(log, logChatId, "HTML");
         }
     }
 
-    public static void log$pinTgBot(String log) {
-        if (asyncSender != null && chatId != null) {
-            asyncSender.send$pinTextMsg(log, chatId, "HTML");
+    public void log$pinTgBot(String log) {
+        if (asyncSender != null && logChatId != null) {
+            asyncSender.send$pinTextMsg(log, logChatId, "HTML");
         }
     }
 
-    public static void logCloseLog(Strategy strategy, List<MyTrade> myTrades) {
+    public void logCloseLog(Strategy strategy, List<MyTrade> myTrades) {
         try {
             if (myTrades == null || myTrades.size() <= 0) {
                 throw new IllegalArgumentException("List<MyTrade> equals to null or size less than 1!");
@@ -91,5 +96,9 @@ public class TradeLogger {
         } catch (IOException|IllegalArgumentException exception) {
             logException(exception);
         }
+    }
+
+    public void setLogChatId(Long logChatId) {
+        this.logChatId = logChatId;
     }
 }

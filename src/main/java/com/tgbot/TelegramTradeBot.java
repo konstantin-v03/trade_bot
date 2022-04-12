@@ -21,14 +21,15 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class TelegramTradeBot extends AbilityBot {
+    private final AsyncSender asyncSender;
     private final RequestSender requestSender;
     private final TradeBot tradeBot;
-
     private final long creatorId;
+
+    public final TradeLogger tradeLogger;
 
     public TelegramTradeBot(String botToken, String botUsername, long creatorId, RequestSender requestSender, TradeBot tradeBot) {
         super(botToken, botUsername, new CustomToggle()
@@ -45,8 +46,8 @@ public class TelegramTradeBot extends AbilityBot {
         this.creatorId = creatorId;
         this.requestSender = requestSender;
         this.tradeBot = tradeBot;
-        TradeLogger.asyncSender = new AsyncSender(this);
-        TradeLogger.chatId = creatorId;
+        asyncSender = new AsyncSender(this);
+        tradeLogger = new TradeLogger(asyncSender, creatorId);
     }
 
     @Override
@@ -81,7 +82,7 @@ public class TelegramTradeBot extends AbilityBot {
                             throw new IllegalArgumentException();
                         }
                     } catch (IllegalArgumentException illegalArgumentException) {
-                        TradeLogger.logTgBot(I18nSupport.i18n_literals("position.not.open",
+                        tradeLogger.logTgBot(I18nSupport.i18n_literals("position.not.open",
                                 illegalArgumentException.getMessage()));
                         return;
                     }
@@ -92,8 +93,8 @@ public class TelegramTradeBot extends AbilityBot {
                         requestSender.openShortPositionMarket(ctx.firstArg(), MarginType.ISOLATED, amount, leverage);
                     }
 
-                    TradeLogger.logOpenPosition(requestSender.getPosition(ctx.firstArg(), positionSide));
-                    TradeLogger.logTP_SLOrders(requestSender.postTP_SLOrders(ctx.firstArg(), positionSide, takeProfitPercent, stopLossPercent));
+                    tradeLogger.logOpenPosition(requestSender.getPosition(ctx.firstArg(), positionSide));
+                    tradeLogger.logTP_SLOrders(requestSender.postTP_SLOrders(ctx.firstArg(), positionSide, takeProfitPercent, stopLossPercent));
                 })
                 .build();
     }
@@ -121,8 +122,8 @@ public class TelegramTradeBot extends AbilityBot {
                         order = requestSender.closePositionMarket(ctx.firstArg(), positionSide);
                     }
 
-                    TradeLogger.logClosePosition(order != null ? requestSender.getMyTrades(ctx.firstArg(), order.getOrderId()) : null);
-                    TradeLogger.logTgBot(requestSender.cancelOrders(ctx.firstArg()).getMsg());
+                    tradeLogger.logClosePosition(order != null ? requestSender.getMyTrades(ctx.firstArg(), order.getOrderId()) : null);
+                    tradeLogger.logTgBot(requestSender.cancelOrders(ctx.firstArg()).getMsg());
                 })
                 .build();
     }
@@ -145,24 +146,24 @@ public class TelegramTradeBot extends AbilityBot {
 
                         if (strategy.equals(Strategy.MFI_BIG_GUY)) {
                             tradeBot.enabledStrategies.put(ctx.secondArg(),
-                                    new MFI_BigGuyHandler(requestSender, strategyProps));
+                                    new MFI_BigGuyHandler(requestSender, strategyProps, new TradeLogger(asyncSender, creatorId)));
                         } else if (strategy.equals(Strategy.ALTCOINS_1h_4h)) {
                             tradeBot.enabledStrategies.put(ctx.secondArg(),
-                                    new Altcoins1h4hHandler(requestSender, strategyProps));
+                                    new Altcoins1h4hHandler(requestSender, strategyProps, new TradeLogger(asyncSender, creatorId)));
                         } else if (strategy.equals(Strategy.ALTCOINS)) {
                             tradeBot.enabledStrategies.put(ctx.secondArg(),
-                                    new AltcoinsHandler(requestSender, strategyProps));
+                                    new AltcoinsHandler(requestSender, strategyProps, new TradeLogger(asyncSender, creatorId)));
                         } else if (strategy.equals(Strategy.ALARM)) {
                             tradeBot.enabledStrategies.put(ctx.secondArg(),
-                                    new AlarmHandler(requestSender, strategyProps));
+                                    new AlarmHandler(requestSender, strategyProps, new TradeLogger(asyncSender, creatorId)));
                         } else {
                             throw new IllegalArgumentException("Strategy is not supported!");
                         }
 
-                        TradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.enabled"));
+                        tradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.enabled"));
                     } catch (IllegalArgumentException illegalArgumentException) {
                         illegalArgumentException.printStackTrace();
-                        TradeLogger.logException(illegalArgumentException);
+                        tradeLogger.logException(illegalArgumentException);
                     }
                 })
                 .build();
@@ -179,10 +180,10 @@ public class TelegramTradeBot extends AbilityBot {
                     StrategyHandler strategyHandler;
 
                     if ((strategyHandler = tradeBot.enabledStrategies.remove(ctx.firstArg())) != null) {
-                        TradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.disabled"));
+                        tradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.disabled"));
                         strategyHandler.close();
                     } else {
-                        TradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.not.found"));
+                        tradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.not.found"));
                     }
                 })
                 .build();
@@ -195,7 +196,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(0)
-                .action(ctx -> TradeLogger.logTgBot(I18nSupport.i18n_literals("supported.strategies",
+                .action(ctx -> tradeLogger.logTgBot(I18nSupport.i18n_literals("supported.strategies",
                         Arrays.stream(Strategy.values())
                                 .map(str -> I18nSupport.i18n_literals("supported.strategy", str))
                                 .collect(Collectors.joining("\n")))))
@@ -209,7 +210,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(0)
-                .action(ctx -> TradeLogger.logTgBot(I18nSupport.i18n_literals("enabled.strategies",
+                .action(ctx -> tradeLogger.logTgBot(I18nSupport.i18n_literals("enabled.strategies",
                         tradeBot.enabledStrategies.values().stream().map(strategyHandler -> {
                             StrategyProps strategyProps = strategyHandler.getStrategyProps();
                             return I18nSupport.i18n_literals("enabled.strategy",
@@ -225,7 +226,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .name(I18nSupport.i18n_literals("get.log"))
                 .info(I18nSupport.i18n_literals("get.log.info"))
                 .privacy(Privacy.CREATOR)
-                .locality(Locality.ALL)
+                .locality(Locality.USER)
                 .input(2)
                 .action(ctx -> {
                     Strategy strategy;
@@ -233,7 +234,7 @@ public class TelegramTradeBot extends AbilityBot {
                     try {
                         strategy = Strategy.valueOf(ctx.firstArg());
                     } catch (IllegalArgumentException illegalArgumentException) {
-                        TradeLogger.logException(illegalArgumentException);
+                        tradeLogger.logException(illegalArgumentException);
                         return;
                     }
 
@@ -281,10 +282,18 @@ public class TelegramTradeBot extends AbilityBot {
                 .info(I18nSupport.i18n_literals("initlogchat.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.ALL)
-                .input(0)
+                .input(1)
                 .action(ctx -> {
-                    TradeLogger.chatId = ctx.chatId();
-                    TradeLogger.logTgBot(I18nSupport.i18n_literals("log.chat.added"));
+                    StrategyHandler strategyHandler = tradeBot.enabledStrategies.get(ctx.firstArg());
+
+                    if (strategyHandler != null) {
+                        strategyHandler.setLogChatId(ctx.chatId());
+                        asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("log.chat.added",
+                                strategyHandler.getStrategyProps().getTicker(),
+                                strategyHandler.getStrategyProps().getStrategy()), ctx.chatId(), "HTML");
+                    } else {
+                        tradeLogger.logTgBot(I18nSupport.i18n_literals("log.chat.not.added"));
+                    }
                 })
                 .build();
     }

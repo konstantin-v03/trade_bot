@@ -22,8 +22,8 @@ public class AltcoinsHandler extends StrategyHandler {
     private final Amount amount;
     private final int leverage;
 
-    public AltcoinsHandler(RequestSender requestSender, StrategyProps strategyProps) throws IllegalArgumentException {
-        super(requestSender, strategyProps);
+    public AltcoinsHandler(RequestSender requestSender, StrategyProps strategyProps, TradeLogger tradeLogger) throws IllegalArgumentException {
+        super(requestSender, strategyProps, tradeLogger);
 
         amount = new Amount(strategyProps.getProperties().getProperty(Constants.AMOUNT_STR));
         leverage = Integer.parseInt(strategyProps.getProperties().getProperty(Constants.LEVERAGE_STR));
@@ -38,7 +38,7 @@ public class AltcoinsHandler extends StrategyHandler {
         if (signalClass == PIFAGOR_ALTCOINS_SIGNAL.class) {
             pifagorAltcoinsSignal = new PIFAGOR_ALTCOINS_SIGNAL(inputSignal);
 
-            TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.signal",
+            tradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.signal",
                     pifagorAltcoinsSignal.getTicker(),
                     pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ? 0 : 1,
                     pifagorAltcoinsSignal.getAction(),
@@ -63,14 +63,14 @@ public class AltcoinsHandler extends StrategyHandler {
         List<MyTrade> myTrades = closePositionOrder != null ? requestSender.getMyTrades(strategyProps.getTicker(),
                 closePositionOrder.getOrderId()) : null;
 
-        TradeLogger.logClosePosition(myTrades);
-        TradeLogger.logCloseLog(Strategy.ALTCOINS, myTrades);
+        tradeLogger.logClosePosition(myTrades);
+        tradeLogger.logCloseLog(Strategy.ALTCOINS, myTrades);
 
         Position position = requestSender.getPosition(strategyProps.getTicker(),
                 pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
                         PositionSide.LONG : PositionSide.SHORT);
 
-        TradeLogger.logOpenPosition(position);
+        tradeLogger.logOpenPosition(position);
     }
 
     @Override

@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 public class AlarmHandler extends StrategyHandler {
     private Map<ALARM_SIGNAL.Indicator, Integer> dailyOncePerMinuteCount;
 
-    public AlarmHandler(RequestSender requestSender, StrategyProps strategyProps) {
-        super(requestSender, strategyProps);
+    public AlarmHandler(RequestSender requestSender, StrategyProps strategyProps, TradeLogger tradeLogger) {
+        super(requestSender, strategyProps, tradeLogger);
         dailyOncePerMinuteCount = new ConcurrentHashMap<>();
 
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
@@ -48,7 +48,7 @@ public class AlarmHandler extends StrategyHandler {
             for (ALARM_SIGNAL.Indicator indicator : dailyOncePerMinuteCountTemp.keySet()) {
                 count = dailyOncePerMinuteCountTemp.get(indicator);
 
-                TradeLogger.logTgBot(I18nSupport.i18n_literals("alarm.once.per.minute.count",
+                tradeLogger.logTgBot(I18nSupport.i18n_literals("alarm.once.per.minute.count",
                         strategyProps.getTicker(),
                         indicator.ordinal(),
                         indicator.alias(),
@@ -58,8 +58,8 @@ public class AlarmHandler extends StrategyHandler {
                     Utils.appendStrToFile(getOncePerMinuteCountLogFileName(indicator),
                             LocalDate.now().minusDays(1).format(DateTimeFormatter
                                     .ofLocalizedDate(FormatStyle.SHORT)) + " " + count + "\n");
-                } catch (IOException ignored) {
-
+                } catch (IOException ioException) {
+                    tradeLogger.logException(ioException);
                 }
             }
         },
@@ -87,7 +87,7 @@ public class AlarmHandler extends StrategyHandler {
             dailyOncePerMinuteCount.putIfAbsent(indicator, 0);
             dailyOncePerMinuteCount.put(indicator, dailyOncePerMinuteCount.get(indicator) + 1);
         } else if (option.equals(ALARM_SIGNAL.Option.ONCE_PER_BAR_CLOSE)){
-            TradeLogger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.bar.close",
+            tradeLogger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.bar.close",
                     strategyProps.getTicker(),
                     indicator.ordinal(),
                     indicator.alias()));

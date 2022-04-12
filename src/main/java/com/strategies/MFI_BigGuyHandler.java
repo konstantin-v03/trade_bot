@@ -37,8 +37,8 @@ public class MFI_BigGuyHandler extends StrategyHandler {
 
     private final Timer timer = new Timer();
 
-    public MFI_BigGuyHandler(RequestSender requestSender, StrategyProps strategyProps) throws IllegalArgumentException {
-        super(requestSender, strategyProps);
+    public MFI_BigGuyHandler(RequestSender requestSender, StrategyProps strategyProps, TradeLogger tradeLogger) throws IllegalArgumentException {
+        super(requestSender, strategyProps, tradeLogger);
 
         Properties properties = strategyProps.getProperties();
 
@@ -64,19 +64,19 @@ public class MFI_BigGuyHandler extends StrategyHandler {
 
         if (signalClass == PIFAGOR_MFI_Signal.class) {
             pifagorMfiSignal = new PIFAGOR_MFI_Signal(inputSignal);
-            TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.signal", pifagorMfiSignal.getAction().toString(), pifagorMfiSignal.getClose()));
+            tradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.signal", pifagorMfiSignal.getAction().toString(), pifagorMfiSignal.getClose()));
 
             if (strategyProps.isDebugMode()) {
-                TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.big.guy.debug",
+                tradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.big.guy.debug",
                             currIndex,
                             pifagorMfiSignal.toString()));
             }
         } else if (signalClass == PIFAGOR_KHALIFA_Signal.class) {
             pifagorKhalifaSignal = new PIFAGOR_KHALIFA_Signal(inputSignal);
-            TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.khalifa.signal.floor", pifagorKhalifaSignal.getFloor(), pifagorKhalifaSignal.getClose()));
+            tradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.khalifa.signal.floor", pifagorKhalifaSignal.getFloor(), pifagorKhalifaSignal.getClose()));
 
             if (strategyProps.isDebugMode()) {
-                TradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.big.guy.debug",
+                tradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.big.guy.debug",
                             currIndex,
                             pifagorKhalifaSignal.toString()));
             }
@@ -101,16 +101,16 @@ public class MFI_BigGuyHandler extends StrategyHandler {
                 requestSender.cancelOrders(strategyProps.getTicker());
 
                 synchronized (lock) {
-                    TradeLogger.logTP_SLOrders(tp_sl = requestSender.postTP_SLOrders(strategyProps.getTicker(),
+                    tradeLogger.logTP_SLOrders(tp_sl = requestSender.postTP_SLOrders(strategyProps.getTicker(),
                             PositionSide.LONG,
                             takeProfit,
                             stopLoss));
                 }
 
                 Utils.sleep(1000);
-                TradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG));
+                tradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG));
             } else {
-                TradeLogger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.LONG, position.getEntryPrice()));
+                tradeLogger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.LONG, position.getEntryPrice()));
             }
         }
     }
@@ -121,14 +121,14 @@ public class MFI_BigGuyHandler extends StrategyHandler {
         synchronized (lock) {
             if (tp_sl.getStopLossOrder() != null && (stopLoss = requestSender.getMyTrades(strategyProps.getTicker(),
                     tp_sl.getStopLossOrder().getOrderId())) != null) {
-                TradeLogger.logClosePosition(stopLoss);
-                TradeLogger.logCloseLog(Strategy.MFI_BIG_GUY, stopLoss);
+                tradeLogger.logClosePosition(stopLoss);
+                tradeLogger.logCloseLog(Strategy.MFI_BIG_GUY, stopLoss);
             }
 
             if (tp_sl.getTakeProfitOrder() != null && (takeProfit = requestSender.getMyTrades(strategyProps.getTicker(),
                     tp_sl.getTakeProfitOrder().getOrderId())) != null) {
-                TradeLogger.logClosePosition(takeProfit);
-                TradeLogger.logCloseLog(Strategy.MFI_BIG_GUY, takeProfit);
+                tradeLogger.logClosePosition(takeProfit);
+                tradeLogger.logCloseLog(Strategy.MFI_BIG_GUY, takeProfit);
             }
 
             tp_sl = null;

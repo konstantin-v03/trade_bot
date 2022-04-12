@@ -71,10 +71,8 @@ public class Utils {
     }
 
     public static int intervalToInt(String intervalStr) {
-        int interval = -1;
-
         try {
-            interval = Integer.parseInt(intervalStr);
+            return Integer.parseInt(intervalStr);
         } catch (IllegalArgumentException illegalArgumentException) {
             if (intervalStr.equalsIgnoreCase("D")) {
                 return 24 * 60;
@@ -87,7 +85,7 @@ public class Utils {
             }
         }
 
-        return interval;
+        return -1;
     }
 
     public static void sleep(long delay) {

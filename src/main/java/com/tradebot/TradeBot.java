@@ -2,7 +2,6 @@ package com.tradebot;
 
 import com.binance.client.SyncRequestClient;
 import com.futures.dualside.RequestSender;
-import com.log.TradeLogger;
 import com.server.WebhookReceiver;
 import com.strategies.StrategyHandler;
 import com.sun.net.httpserver.HttpExchange;
@@ -20,7 +19,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TradeBot implements HttpHandler {
-
+    private final TelegramTradeBot telegramTradeBot;
     public final Map<String, StrategyHandler> enabledStrategies;
 
     public TradeBot(String webhookRequestContext,
@@ -30,11 +29,11 @@ public class TradeBot implements HttpHandler {
                     String tgBotUsername,
                     long tgBotCreatorId) throws TelegramApiException, GeneralSecurityException, IOException {
         TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
-        api.registerBot(new TelegramTradeBot(tgBotToken,
+        api.registerBot((telegramTradeBot = new TelegramTradeBot(tgBotToken,
                 tgBotUsername,
                 tgBotCreatorId,
                 new RequestSender(SyncRequestClient.create(binanceApiKey, binanceSecretKey)),
-                this));
+                this)));
         enabledStrategies = new ConcurrentHashMap<>();
 
         WebhookReceiver.start("/" + webhookRequestContext, this);
@@ -59,7 +58,7 @@ public class TradeBot implements HttpHandler {
                 strategyHandler.process(inputRequest);
             }
         } catch (RuntimeException exception) {
-            TradeLogger.logException(exception);
+            telegramTradeBot.tradeLogger.logException(exception);
         }
     }
 }
