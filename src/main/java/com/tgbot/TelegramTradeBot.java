@@ -285,7 +285,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .locality(Locality.ALL)
                 .input(1)
                 .action(ctx -> {
-                    StrategyHandler strategyHandler = tradeBot.removeStrategyHandler(ctx.firstArg());
+                    StrategyHandler strategyHandler = tradeBot.getStrategyHandler(ctx.firstArg());
 
                     if (strategyHandler != null) {
                         strategyHandler.setLogChatId(ctx.chatId());

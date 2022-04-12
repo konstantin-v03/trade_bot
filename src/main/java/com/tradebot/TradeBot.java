@@ -64,6 +64,10 @@ public class TradeBot implements HttpHandler {
         }
     }
 
+    public StrategyHandler getStrategyHandler(String ticker) {
+        return enabledStrategies.get(ticker);
+    }
+
     public void setStrategyHandler(String ticker, StrategyHandler strategyHandler) {
         enabledStrategies.put(ticker, strategyHandler);
     }
