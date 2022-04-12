@@ -122,13 +122,13 @@ public class MFI_BigGuyHandler extends StrategyHandler {
             if (tp_sl.getStopLossOrder() != null && (stopLoss = requestSender.getMyTrades(strategyProps.getTicker(),
                     tp_sl.getStopLossOrder().getOrderId())) != null) {
                 tradeLogger.logClosePosition(stopLoss);
-                tradeLogger.logCloseLog(Strategy.MFI_BIG_GUY, stopLoss);
+                tradeLogger.logCloseLogToFile(Strategy.MFI_BIG_GUY, stopLoss);
             }
 
             if (tp_sl.getTakeProfitOrder() != null && (takeProfit = requestSender.getMyTrades(strategyProps.getTicker(),
                     tp_sl.getTakeProfitOrder().getOrderId())) != null) {
                 tradeLogger.logClosePosition(takeProfit);
-                tradeLogger.logCloseLog(Strategy.MFI_BIG_GUY, takeProfit);
+                tradeLogger.logCloseLogToFile(Strategy.MFI_BIG_GUY, takeProfit);
             }
 
             tp_sl = null;

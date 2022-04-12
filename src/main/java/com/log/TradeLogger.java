@@ -14,11 +14,27 @@ import java.util.Date;
 import java.util.List;
 
 public class TradeLogger {
-    public final AsyncSender asyncSender;
+    private final AsyncSender asyncSender;
     private Long logChatId;
 
     public TradeLogger(AsyncSender asyncSender, Long logChatId) {
         this.asyncSender = asyncSender;
+        this.logChatId = logChatId;
+    }
+
+    public void logTgBot(String log) {
+        if (asyncSender != null && logChatId != null) {
+            asyncSender.sendTextMsgAsync(log, logChatId, "HTML");
+        }
+    }
+
+    public void log$pinTgBot(String log) {
+        if (asyncSender != null && logChatId != null) {
+            asyncSender.send$pinTextMsg(log, logChatId, "HTML");
+        }
+    }
+
+    public void setLogChatId(Long logChatId) {
         this.logChatId = logChatId;
     }
 
@@ -68,19 +84,7 @@ public class TradeLogger {
         logTgBot(I18nSupport.i18n_literals("error.occured", exception));
     }
 
-    public void logTgBot(String log) {
-        if (asyncSender != null && logChatId != null) {
-            asyncSender.sendTextMsgAsync(log, logChatId, "HTML");
-        }
-    }
-
-    public void log$pinTgBot(String log) {
-        if (asyncSender != null && logChatId != null) {
-            asyncSender.send$pinTextMsg(log, logChatId, "HTML");
-        }
-    }
-
-    public void logCloseLog(Strategy strategy, List<MyTrade> myTrades) {
+    public void logCloseLogToFile(Strategy strategy, List<MyTrade> myTrades) {
         try {
             if (myTrades == null || myTrades.size() <= 0) {
                 throw new IllegalArgumentException("List<MyTrade> equals to null or size less than 1!");
@@ -96,9 +100,5 @@ public class TradeLogger {
         } catch (IOException|IllegalArgumentException exception) {
             logException(exception);
         }
-    }
-
-    public void setLogChatId(Long logChatId) {
-        this.logChatId = logChatId;
     }
 }

@@ -145,16 +145,16 @@ public class TelegramTradeBot extends AbilityBot {
                                 ctx.arguments()[3]);
 
                         if (strategy.equals(Strategy.MFI_BIG_GUY)) {
-                            tradeBot.enabledStrategies.put(ctx.secondArg(),
+                            tradeBot.setStrategyHandler(ctx.secondArg(),
                                     new MFI_BigGuyHandler(requestSender, strategyProps, new TradeLogger(asyncSender, creatorId)));
                         } else if (strategy.equals(Strategy.ALTCOINS_1h_4h)) {
-                            tradeBot.enabledStrategies.put(ctx.secondArg(),
+                            tradeBot.setStrategyHandler(ctx.secondArg(),
                                     new Altcoins1h4hHandler(requestSender, strategyProps, new TradeLogger(asyncSender, creatorId)));
                         } else if (strategy.equals(Strategy.ALTCOINS)) {
-                            tradeBot.enabledStrategies.put(ctx.secondArg(),
+                            tradeBot.setStrategyHandler(ctx.secondArg(),
                                     new AltcoinsHandler(requestSender, strategyProps, new TradeLogger(asyncSender, creatorId)));
                         } else if (strategy.equals(Strategy.ALARM)) {
-                            tradeBot.enabledStrategies.put(ctx.secondArg(),
+                            tradeBot.setStrategyHandler(ctx.secondArg(),
                                     new AlarmHandler(requestSender, strategyProps, new TradeLogger(asyncSender, creatorId)));
                         } else {
                             throw new IllegalArgumentException("Strategy is not supported!");
@@ -179,7 +179,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .action(ctx -> {
                     StrategyHandler strategyHandler;
 
-                    if ((strategyHandler = tradeBot.enabledStrategies.remove(ctx.firstArg())) != null) {
+                    if ((strategyHandler = tradeBot.removeStrategyHandler(ctx.firstArg())) != null) {
                         tradeLogger.logTgBot(I18nSupport.i18n_literals("strategy.disabled"));
                         strategyHandler.close();
                     } else {
@@ -211,8 +211,9 @@ public class TelegramTradeBot extends AbilityBot {
                 .locality(Locality.USER)
                 .input(0)
                 .action(ctx -> tradeLogger.logTgBot(I18nSupport.i18n_literals("enabled.strategies",
-                        tradeBot.enabledStrategies.values().stream().map(strategyHandler -> {
+                        tradeBot.enabledStrategyHandlers().stream().map(strategyHandler -> {
                             StrategyProps strategyProps = strategyHandler.getStrategyProps();
+
                             return I18nSupport.i18n_literals("enabled.strategy",
                                     strategyProps.getTicker(),
                                     strategyProps.getStrategy(),
@@ -284,7 +285,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .locality(Locality.ALL)
                 .input(1)
                 .action(ctx -> {
-                    StrategyHandler strategyHandler = tradeBot.enabledStrategies.get(ctx.firstArg());
+                    StrategyHandler strategyHandler = tradeBot.removeStrategyHandler(ctx.firstArg());
 
                     if (strategyHandler != null) {
                         strategyHandler.setLogChatId(ctx.chatId());

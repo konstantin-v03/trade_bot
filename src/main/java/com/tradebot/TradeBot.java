@@ -15,12 +15,14 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TradeBot implements HttpHandler {
     private final TelegramTradeBot telegramTradeBot;
-    public final Map<String, StrategyHandler> enabledStrategies;
+    private final Map<String, StrategyHandler> enabledStrategies;
 
     public TradeBot(String webhookRequestContext,
                     String binanceApiKey,
@@ -60,5 +62,17 @@ public class TradeBot implements HttpHandler {
         } catch (RuntimeException exception) {
             telegramTradeBot.tradeLogger.logException(exception);
         }
+    }
+
+    public void setStrategyHandler(String ticker, StrategyHandler strategyHandler) {
+        enabledStrategies.put(ticker, strategyHandler);
+    }
+
+    public StrategyHandler removeStrategyHandler(String ticker) {
+        return enabledStrategies.remove(ticker);
+    }
+
+    public Collection<StrategyHandler> enabledStrategyHandlers() {
+        return enabledStrategies.values();
     }
 }

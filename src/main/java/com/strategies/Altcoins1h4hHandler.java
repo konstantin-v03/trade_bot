@@ -156,7 +156,7 @@ public class Altcoins1h4hHandler extends StrategyHandler {
             Utils.sleep(1000);
             List<MyTrade> myTrades = requestSender.getMyTrades(strategyProps.getTicker(), closePositionOrder.getOrderId());
             tradeLogger.logClosePosition(myTrades);
-            tradeLogger.logCloseLog(Strategy.ALTCOINS_1h_4h, myTrades);
+            tradeLogger.logCloseLogToFile(Strategy.ALTCOINS_1h_4h, myTrades);
         }
     }
 

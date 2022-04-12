@@ -64,7 +64,7 @@ public class AltcoinsHandler extends StrategyHandler {
                 closePositionOrder.getOrderId()) : null;
 
         tradeLogger.logClosePosition(myTrades);
-        tradeLogger.logCloseLog(Strategy.ALTCOINS, myTrades);
+        tradeLogger.logCloseLogToFile(Strategy.ALTCOINS, myTrades);
 
         Position position = requestSender.getPosition(strategyProps.getTicker(),
                 pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
