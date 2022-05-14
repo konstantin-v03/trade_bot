@@ -5,6 +5,7 @@ import com.log.TradeLogger;
 import com.signal.ALARM_SIGNAL;
 import com.signal.Signal;
 import com.utils.I18nSupport;
+import com.utils.Scheduler;
 import com.utils.Utils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,23 +24,14 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class AlarmHandler extends StrategyHandler {
+    private final Scheduler scheduler;
     private Map<ALARM_SIGNAL.Indicator, Integer> dailyOncePerMinuteCount;
 
     public AlarmHandler(RequestSender requestSender, StrategyProps strategyProps, TradeLogger tradeLogger) {
         super(requestSender, strategyProps, tradeLogger);
+
         dailyOncePerMinuteCount = new ConcurrentHashMap<>();
-
-        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
-        ZonedDateTime nextRun = now.withHour(0).withMinute(0).withSecond(0);
-
-        if (now.compareTo(nextRun) > 0) {
-            nextRun = nextRun.plusDays(1);
-        }
-
-        long initialDelay = Duration.between(now, nextRun).getSeconds();
-
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(() -> {
+        scheduler = Scheduler.scheduleEveryDayAtFixedTime(() -> {
             Map<ALARM_SIGNAL.Indicator, Integer> dailyOncePerMinuteCountTemp = dailyOncePerMinuteCount;
             dailyOncePerMinuteCount = new ConcurrentHashMap<>();
 
@@ -62,10 +54,7 @@ public class AlarmHandler extends StrategyHandler {
                     tradeLogger.logException(ioException);
                 }
             }
-        },
-                initialDelay,
-                TimeUnit.DAYS.toSeconds(1),
-                TimeUnit.SECONDS);
+        }, 0, 0, 0);
     }
 
     @Override
@@ -98,7 +87,7 @@ public class AlarmHandler extends StrategyHandler {
 
     @Override
     public void close() {
-
+        scheduler.shutdown();
     }
 
     public static String getOncePerMinuteCountLogFileName(ALARM_SIGNAL.Indicator indicator) {

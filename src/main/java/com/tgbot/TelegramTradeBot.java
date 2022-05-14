@@ -156,6 +156,9 @@ public class TelegramTradeBot extends AbilityBot {
                         } else if (strategy.equals(Strategy.ALARM)) {
                             tradeBot.setStrategyHandler(ctx.secondArg(),
                                     new AlarmHandler(requestSender, strategyProps, new TradeLogger(asyncSender, creatorId)));
+                        } else if (strategy.equals(Strategy.CHIA_BALANCE_ALARM)) {
+                            tradeBot.setStrategyHandler(ctx.secondArg(),
+                                    new ChiaAlarmHandler(requestSender, strategyProps, new TradeLogger(asyncSender, creatorId)));
                         } else {
                             throw new IllegalArgumentException("Strategy is not supported!");
                         }
