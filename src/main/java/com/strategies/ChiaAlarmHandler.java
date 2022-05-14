@@ -23,8 +23,7 @@ public class ChiaAlarmHandler extends StrategyHandler {
     private final String address;
 
     private final OkHttpClient client;
-    private int lastMojo = -1;
-    private float lastXch = -1;
+    private double lastXch = -1;
 
     public ChiaAlarmHandler(RequestSender requestSender, StrategyProps strategyProps, TradeLogger tradeLogger) throws IllegalArgumentException {
         super(requestSender, strategyProps, tradeLogger);
@@ -48,24 +47,22 @@ public class ChiaAlarmHandler extends StrategyHandler {
                     .lines()
                     .collect(Collectors.joining("\n")));
 
-            int mojo = responseJSON.getInt("mojo");
-            float xch = responseJSON.getFloat("xch");
+            double xch = responseJSON.getDouble("xch");
 
-            if (lastMojo == -1 || lastXch == -1) {
-                lastMojo = mojo;
+            if (lastXch == -1) {
                 lastXch = xch;
             }
 
-            if (mojo != lastMojo) {
-                if (mojo > lastMojo) {
+            if (xch != lastXch) {
+                if (xch > lastXch) {
                     tradeLogger.logTgBot(I18nSupport.i18n_literals("chia.balance.changed",
                             alias,
                             String.format("%.1f", xch),
                             "+" + (xch - lastXch)));
                 }
 
-                if (mojo < lastMojo) {
-                    if (mojo == 0) {
+                if (xch < lastXch) {
+                    if (xch == 0) {
                         tradeLogger.log$pinTgBot(I18nSupport.i18n_literals("chia.balance.changed",
                                 alias,
                                 String.format("%.1f", xch),
@@ -78,7 +75,6 @@ public class ChiaAlarmHandler extends StrategyHandler {
                     }
                 }
 
-                lastMojo = mojo;
                 lastXch = xch;
             }
         });
