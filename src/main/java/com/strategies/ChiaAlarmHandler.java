@@ -58,7 +58,7 @@ public class ChiaAlarmHandler extends StrategyHandler {
                     tradeLogger.logTgBot(I18nSupport.i18n_literals("chia.balance.changed",
                             alias,
                             String.format("%.1f", xch),
-                            "+" + (xch - lastXch)));
+                            "+" + String.format("%.1f", xch - lastXch)));
                 }
 
                 if (xch < lastXch) {
