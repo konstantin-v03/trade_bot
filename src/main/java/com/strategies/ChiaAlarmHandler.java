@@ -1,7 +1,7 @@
 package com.strategies;
 
 import com.futures.dualside.RequestSender;
-import com.log.TradeLogger;
+import com.tgbot.AsyncSender;
 import com.utils.I18nSupport;
 import com.utils.Scheduler;
 import okhttp3.OkHttpClient;
@@ -25,8 +25,8 @@ public class ChiaAlarmHandler extends StrategyHandler {
     private final OkHttpClient client;
     private double lastXch = -1;
 
-    public ChiaAlarmHandler(RequestSender requestSender, StrategyProps strategyProps, TradeLogger tradeLogger) throws IllegalArgumentException {
-        super(requestSender, strategyProps, tradeLogger);
+    public ChiaAlarmHandler(RequestSender requestSender, StrategyProps strategyProps, AsyncSender asyncSender) throws IllegalArgumentException {
+        super(requestSender, strategyProps, asyncSender);
         address = strategyProps.getProperties().getProperty("address");
         alias = strategyProps.getProperties().getProperty("alias");
         client = new OkHttpClient();
@@ -55,7 +55,7 @@ public class ChiaAlarmHandler extends StrategyHandler {
 
             if (xch != lastXch) {
                 if (xch > lastXch) {
-                    tradeLogger.logTgBot(I18nSupport.i18n_literals("chia.balance.changed",
+                    logger.logTgBot(I18nSupport.i18n_literals("chia.balance.changed",
                             alias,
                             String.format("%.1f", xch),
                             "+" + String.format("%.1f", xch - lastXch)));
@@ -63,12 +63,12 @@ public class ChiaAlarmHandler extends StrategyHandler {
 
                 if (xch < lastXch) {
                     if (xch == 0) {
-                        tradeLogger.log$pinTgBot(I18nSupport.i18n_literals("chia.balance.changed",
+                        logger.log$pinTgBot(I18nSupport.i18n_literals("chia.balance.changed",
                                 alias,
                                 String.format("%.1f", xch),
                                 "-" + String.format("%.1f", lastXch - xch)));
                     } else {
-                        tradeLogger.logTgBot(I18nSupport.i18n_literals("chia.balance.changed",
+                        logger.logTgBot(I18nSupport.i18n_literals("chia.balance.changed",
                                 alias,
                                 String.format("%.1f", xch),
                                 "-" + String.format("%.1f", lastXch - xch)));
@@ -82,7 +82,7 @@ public class ChiaAlarmHandler extends StrategyHandler {
 
     @Override
     public void process(JSONObject inputSignal) throws JSONException, IllegalArgumentException {
-        tradeLogger.logTgBot(I18nSupport.i18n_literals("unsupported.signal.exception"));
+        logger.logTgBot(I18nSupport.i18n_literals("unsupported.signal.exception"));
     }
 
     @Override

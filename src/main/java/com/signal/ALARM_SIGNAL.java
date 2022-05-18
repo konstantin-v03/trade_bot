@@ -11,7 +11,15 @@ public class ALARM_SIGNAL extends Signal {
         PIFAGOR_STRONG_LONG_ALARM("СТРОНГ ЛОНГ"),
         PIFAGOR_STRONG_SHORT_ALARM("СТРОНГ ШОРТ"),
         PIFAGOR_GREEN_DOT_ALARM("ЗЕЛЁНАЯ ТОЧКА"),
-        PIFAGOR_RED_DOT_ALARM("КРАСНАЯ ТОЧКА");
+        PIFAGOR_RED_DOT_ALARM("КРАСНАЯ ТОЧКА"),
+        PIFAGOR_WARM_BUY_ALARM("WARM BUY"),
+        PIFAGOR_WARM_STRONG_BUY_ALARM("WARM STRONG BUY"),
+        PIFAGOR_MFI_BUY("MFI BUY"),
+        PIFAGOR_MFI_STRONG_BUY("MFI STRONG BUY"),
+        PIFAGOR_BIG_GUY_SELL("BIG GUY крупный игрок продает свои позиции"),
+        PIFAGOR_KHALIFA_ANY_FLOOR("BIG GUY крупный игрок накапливает позиции"),
+        PIFAGOR_BIG_GUY_BIG_PUMP("BIG GUY BIG PUMP"),
+        PIFAGOR_BIG_GUY_SMALL_PUMP("BIG GUY SMALL PUMP");
 
         private final String alias;
 

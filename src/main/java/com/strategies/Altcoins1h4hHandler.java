@@ -8,9 +8,9 @@ import com.binance.client.model.trade.Order;
 import com.binance.client.model.trade.Position;
 import com.futures.Amount;
 import com.futures.dualside.RequestSender;
-import com.log.TradeLogger;
 import com.signal.PIFAGOR_ALTCOINS_SIGNAL;
 import com.signal.Signal;
+import com.tgbot.AsyncSender;
 import com.utils.Constants;
 import com.utils.I18nSupport;
 import com.utils.Utils;
@@ -32,8 +32,8 @@ public class Altcoins1h4hHandler extends StrategyHandler {
     private final Amount amount;
     private final int leverage;
 
-    public Altcoins1h4hHandler(RequestSender requestSender, StrategyProps strategyProps, TradeLogger tradeLogger) throws IllegalArgumentException{
-        super(requestSender, strategyProps, tradeLogger);
+    public Altcoins1h4hHandler(RequestSender requestSender, StrategyProps strategyProps, AsyncSender asyncSender) throws IllegalArgumentException{
+        super(requestSender, strategyProps, asyncSender);
 
         Properties properties = strategyProps.getProperties();
         String action1hStr, action4hStr;
@@ -79,7 +79,7 @@ public class Altcoins1h4hHandler extends StrategyHandler {
                 throw new JSONException("unsupported.signal.exception");
             }
 
-            tradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.signal",
+            logger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.signal",
                     pifagorAltcoinsSignal.getTicker(),
                     pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ? 0 : 1,
                     pifagorAltcoinsSignal.getAction(),
@@ -87,7 +87,7 @@ public class Altcoins1h4hHandler extends StrategyHandler {
                     pifagorAltcoinsSignal.getClose()));
 
             if (strategyProps.isDebugMode()) {
-                tradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.debug",
+                logger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.debug",
                         pifagorAltcoinsSignal.getTicker(),
                         pifagorAltcoinsSignal1h == null ? 0 : pifagorAltcoinsSignal1h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ? 1 : 2,
                         pifagorAltcoinsSignal4h == null ? 0 : pifagorAltcoinsSignal4h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ? 1 : 2));
@@ -107,7 +107,7 @@ public class Altcoins1h4hHandler extends StrategyHandler {
                     PositionSide.LONG : PositionSide.SHORT;
 
             if (strategyProps.isDebugMode()) {
-                tradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.try.close.debug",
+                logger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.try.close.debug",
                         strategyProps.getTicker(),
                         positionSide));
             }
@@ -121,12 +121,12 @@ public class Altcoins1h4hHandler extends StrategyHandler {
                 pifagorAltcoinsSignal4h != null &&
                 pifagorAltcoinsSignal1h.getAction().equals(pifagorAltcoinsSignal4h.getAction())) {
             if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) && longPosition != null) {
-                tradeLogger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.LONG, longPosition.getEntryPrice()));
+                logger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.LONG, longPosition.getEntryPrice()));
             } else if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.SELL) && shortPosition != null) {
-                tradeLogger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.SHORT, shortPosition.getEntryPrice()));
+                logger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.SHORT, shortPosition.getEntryPrice()));
             } else {
                 if (strategyProps.isDebugMode()) {
-                    tradeLogger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.try.open.debug",
+                    logger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.try.open.debug",
                             strategyProps.getTicker(),
                             pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
                                     PositionSide.LONG : PositionSide.SHORT));
@@ -147,7 +147,7 @@ public class Altcoins1h4hHandler extends StrategyHandler {
 
         if (isOpen) {
             Utils.sleep(1000);
-            tradeLogger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(),
+            logger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(),
                     pifagorAltcoinsSignal1h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
                             PositionSide.LONG : PositionSide.SHORT));
         }
@@ -155,8 +155,8 @@ public class Altcoins1h4hHandler extends StrategyHandler {
         if (closePositionOrder != null) {
             Utils.sleep(1000);
             List<MyTrade> myTrades = requestSender.getMyTrades(strategyProps.getTicker(), closePositionOrder.getOrderId());
-            tradeLogger.logClosePosition(myTrades);
-            tradeLogger.logCloseLogToFile(Strategy.ALTCOINS_1h_4h, myTrades);
+            logger.logClosePosition(myTrades);
+            logger.logCloseLogToFile(Strategy.ALTCOINS_1h_4h, myTrades);
         }
     }
 

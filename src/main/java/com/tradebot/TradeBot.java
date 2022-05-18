@@ -7,6 +7,7 @@ import com.strategies.StrategyHandler;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.tgbot.TelegramTradeBot;
+import com.utils.I18nSupport;
 import com.utils.Utils;
 import org.json.JSONObject;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
@@ -15,8 +16,6 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,12 +30,12 @@ public class TradeBot implements HttpHandler {
                     String tgBotUsername,
                     long tgBotCreatorId) throws TelegramApiException, GeneralSecurityException, IOException {
         TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
+        enabledStrategies = new ConcurrentHashMap<>();
         api.registerBot((telegramTradeBot = new TelegramTradeBot(tgBotToken,
                 tgBotUsername,
                 tgBotCreatorId,
                 new RequestSender(SyncRequestClient.create(binanceApiKey, binanceSecretKey)),
-                this)));
-        enabledStrategies = new ConcurrentHashMap<>();
+                enabledStrategies, this)));
 
         WebhookReceiver.start("/" + webhookRequestContext, this);
     }
@@ -60,23 +59,7 @@ public class TradeBot implements HttpHandler {
                 strategyHandler.process(inputRequest);
             }
         } catch (RuntimeException exception) {
-            telegramTradeBot.tradeLogger.logException(exception);
+            telegramTradeBot.asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("error.occured", exception), telegramTradeBot.creatorId());
         }
-    }
-
-    public StrategyHandler getStrategyHandler(String ticker) {
-        return enabledStrategies.get(ticker);
-    }
-
-    public void setStrategyHandler(String ticker, StrategyHandler strategyHandler) {
-        enabledStrategies.put(ticker, strategyHandler);
-    }
-
-    public StrategyHandler removeStrategyHandler(String ticker) {
-        return enabledStrategies.remove(ticker);
-    }
-
-    public Collection<StrategyHandler> enabledStrategyHandlers() {
-        return enabledStrategies.values();
     }
 }
