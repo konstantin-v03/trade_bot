@@ -75,13 +75,15 @@ public class AlarmHandler extends StrategyHandler {
             logger.logTgBot(I18nSupport.i18n_literals("alarm.once.per.minute",
                     strategyProps.getTicker(),
                     indicator.ordinal(),
-                    indicator.alias()));
+                    indicator.alias(),
+                    Utils.intToInterval(alarmSignal.getInterval())));
             dailyOncePerMinuteCount.put(indicator, dailyOncePerMinuteCount.get(indicator) + 1);
         } else if (option.equals(ALARM_SIGNAL.Option.ONCE_PER_BAR_CLOSE)){
             logger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.bar.close",
                     strategyProps.getTicker(),
                     indicator.ordinal(),
-                    indicator.alias()));
+                    indicator.alias(),
+                    Utils.intToInterval(alarmSignal.getInterval())));
         } else {
             throw new IllegalArgumentException();
         }

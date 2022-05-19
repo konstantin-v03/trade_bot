@@ -16,10 +16,12 @@ public class ALARM_SIGNAL extends Signal {
         PIFAGOR_WARM_STRONG_BUY_ALARM("WARM STRONG BUY"),
         PIFAGOR_MFI_BUY("MFI BUY"),
         PIFAGOR_MFI_STRONG_BUY("MFI STRONG BUY"),
-        PIFAGOR_BIG_GUY_SELL("BIG GUY крупный игрок продает свои позиции"),
-        PIFAGOR_KHALIFA_ANY_FLOOR("BIG GUY крупный игрок накапливает позиции"),
+        PIFAGOR_BIG_GUY_SELL("BIG GUY SELL"),
         PIFAGOR_BIG_GUY_BIG_PUMP("BIG GUY BIG PUMP"),
-        PIFAGOR_BIG_GUY_SMALL_PUMP("BIG GUY SMALL PUMP");
+        PIFAGOR_BIG_GUY_SMALL_PUMP("BIG GUY SMALL PUMP"),
+        PIFAGOR_KHALIFA_1("BIG GUY KHALIFA 1 FLOOR"),
+        PIFAGOR_KHALIFA_2("BIG GUY KHALIFA 2 FLOOR"),
+        PIFAGOR_KHALIFA_3("BIG GUY KHALIFA 3 FLOOR");
 
         private final String alias;
 

@@ -7,6 +7,8 @@ import com.strategies.Strategy;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
 
+import static com.utils.DateUtils.*;
+
 public class Utils {
     public static void appendStrToFile(String fileName, String str) throws IOException{
         BufferedWriter out = new BufferedWriter(new FileWriter(fileName, true));
@@ -66,7 +68,7 @@ public class Utils {
         calendar.setTime(date);
 
         return (calendar.get(Calendar.HOUR_OF_DAY) *
-                DateUtils.MINUTES_IN_HOUR +
+                MINUTES_IN_HOUR +
                 calendar.get(Calendar.MINUTE)) / interval;
     }
 
@@ -74,8 +76,8 @@ public class Utils {
         try {
             return Integer.parseInt(intervalStr);
         } catch (IllegalArgumentException illegalArgumentException) {
-            if (intervalStr.equalsIgnoreCase("D")) {
-                return 24 * 60;
+            if (intervalStr.equalsIgnoreCase("D") || intervalStr.equalsIgnoreCase("1d")) {
+                return HOUR_IN_DAY * MINUTES_IN_HOUR;
             } else if (intervalStr.equalsIgnoreCase("12h")) {
                 return 12 * 60;
             } else if (intervalStr.equalsIgnoreCase("4h")) {
@@ -86,6 +88,20 @@ public class Utils {
         }
 
         return -1;
+    }
+
+    public static String intToInterval(int interval) {
+        if (interval % MINUTES_IN_HOUR == 0) {
+            int hourCount = interval / MINUTES_IN_HOUR;
+
+            if (hourCount == 24) {
+                return "1d";
+            } else {
+                return hourCount + "h";
+            }
+        } else {
+            return Integer.toString(interval);
+        }
     }
 
     public static void sleep(long delay) {
