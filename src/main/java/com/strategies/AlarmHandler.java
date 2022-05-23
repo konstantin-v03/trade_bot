@@ -74,6 +74,7 @@ public class AlarmHandler extends StrategyHandler {
             dailyOncePerMinuteCount.putIfAbsent(indicator, 0);
             logger.logTgBot(I18nSupport.i18n_literals("alarm.once.per.minute",
                     strategyProps.getTicker(),
+                    alarmSignal.getExchange(),
                     indicator.ordinal(),
                     indicator.alias(),
                     Utils.intToInterval(alarmSignal.getInterval())));
@@ -81,6 +82,7 @@ public class AlarmHandler extends StrategyHandler {
         } else if (option.equals(ALARM_SIGNAL.Option.ONCE_PER_BAR_CLOSE)){
             logger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.bar.close",
                     strategyProps.getTicker(),
+                    alarmSignal.getExchange(),
                     indicator.ordinal(),
                     indicator.alias(),
                     Utils.intToInterval(alarmSignal.getInterval())));

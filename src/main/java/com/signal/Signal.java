@@ -63,10 +63,10 @@ public abstract class Signal {
     public static Class<?> getSignalClass(JSONObject jsonObject) throws JSONException {
         String indicatorType = jsonObject.getJSONObject(I18nSupport.i18n_literals("indicator")).getString(I18nSupport.i18n_literals("type"));
 
-        if (indicatorType.equals(PIFAGOR_KHALIFA_Signal.TYPE)) {
-            return PIFAGOR_KHALIFA_Signal.class;
-        } else if (indicatorType.equals(PIFAGOR_MFI_Signal.TYPE)) {
-            return PIFAGOR_MFI_Signal.class;
+        if (indicatorType.equals(PIFAGOR_KHALIFA_SIGNAL.TYPE)) {
+            return PIFAGOR_KHALIFA_SIGNAL.class;
+        } else if (indicatorType.equals(PIFAGOR_MFI_SIGNAL.TYPE)) {
+            return PIFAGOR_MFI_SIGNAL.class;
         } else if (indicatorType.equals(PIFAGOR_ALTCOINS_SIGNAL.TYPE)) {
             return PIFAGOR_ALTCOINS_SIGNAL.class;
         } else if (Arrays.asList(ALARM_SIGNAL.Indicator.values()).contains(ALARM_SIGNAL.Indicator.valueOf(indicatorType))) {

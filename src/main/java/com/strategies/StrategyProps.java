@@ -6,13 +6,15 @@ import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import static com.utils.Constants.LOG_CHAT_IDS_STR;
+
 public class StrategyProps implements Serializable {
     private static final long serialVersionUID = 835489771410264765L;
 
     private final Strategy strategy;
     private final String ticker;
     private final boolean debugMode;
-    private final Properties properties;
+    private final Properties properties = new Properties();
     private List<Long> logChatIds;
 
     public StrategyProps(Strategy strategy, String ticker, boolean debugMode, String propertiesString, List<Long> logChatIds) {
@@ -20,24 +22,27 @@ public class StrategyProps implements Serializable {
         this.ticker = ticker;
         this.debugMode = debugMode;
 
-        Properties properties = null;
-
         try {
-            for (String[] keyValue : Arrays.stream(propertiesString.split(","))
+            for (String[] keyValue : Arrays.stream(propertiesString.split(";"))
                     .map(str -> str.split("="))
                     .collect(Collectors.toList())) {
-                if (properties == null) {
-                    properties = new Properties();
-                }
-
                 properties.put(keyValue[0], keyValue[1]);
             }
-        } catch (ArrayIndexOutOfBoundsException ignored) {
-            properties = null;
-        }
 
-        this.properties = properties;
-        this.logChatIds = logChatIds;
+            String logChatIdsPropertyString = properties.getProperty(LOG_CHAT_IDS_STR);
+            List<Long> logChatIdsProperty;
+
+            if (logChatIdsPropertyString != null && (logChatIdsProperty =
+                    Arrays.stream(logChatIdsPropertyString.split(","))
+                    .map(Long::valueOf)
+                    .collect(Collectors.toList())).size() > 0) {
+                this.logChatIds = logChatIdsProperty;
+            } else {
+                this.logChatIds = logChatIds;
+            }
+        } catch (ArrayIndexOutOfBoundsException ignored) {
+
+        }
     }
 
     public Strategy getStrategy() {

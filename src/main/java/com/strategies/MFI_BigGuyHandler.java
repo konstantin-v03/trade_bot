@@ -7,8 +7,8 @@ import com.binance.client.model.trade.Position;
 import com.futures.Amount;
 import com.futures.TP_SL;
 import com.futures.dualside.RequestSender;
-import com.signal.PIFAGOR_KHALIFA_Signal;
-import com.signal.PIFAGOR_MFI_Signal;
+import com.signal.PIFAGOR_KHALIFA_SIGNAL;
+import com.signal.PIFAGOR_MFI_SIGNAL;
 import com.signal.Signal;
 import com.tgbot.AsyncSender;
 import com.utils.Constants;
@@ -24,8 +24,8 @@ import static com.utils.Utils.getCandlestickIndex;
 
 @Deprecated
 public class MFI_BigGuyHandler extends StrategyHandler {
-    private PIFAGOR_MFI_Signal pifagorMfiSignal;
-    private PIFAGOR_KHALIFA_Signal pifagorKhalifaSignal;
+    private PIFAGOR_MFI_SIGNAL pifagorMfiSignal;
+    private PIFAGOR_KHALIFA_SIGNAL pifagorKhalifaSignal;
 
     private final Amount amount;
     private final int leverage;
@@ -62,8 +62,8 @@ public class MFI_BigGuyHandler extends StrategyHandler {
 
         Class<?> signalClass = Signal.getSignalClass(inputSignal);
 
-        if (signalClass == PIFAGOR_MFI_Signal.class) {
-            pifagorMfiSignal = new PIFAGOR_MFI_Signal(inputSignal);
+        if (signalClass == PIFAGOR_MFI_SIGNAL.class) {
+            pifagorMfiSignal = new PIFAGOR_MFI_SIGNAL(inputSignal);
             logger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.signal", pifagorMfiSignal.getAction().toString(), pifagorMfiSignal.getClose()));
 
             if (strategyProps.isDebugMode()) {
@@ -71,8 +71,8 @@ public class MFI_BigGuyHandler extends StrategyHandler {
                             currIndex,
                             pifagorMfiSignal.toString()));
             }
-        } else if (signalClass == PIFAGOR_KHALIFA_Signal.class) {
-            pifagorKhalifaSignal = new PIFAGOR_KHALIFA_Signal(inputSignal);
+        } else if (signalClass == PIFAGOR_KHALIFA_SIGNAL.class) {
+            pifagorKhalifaSignal = new PIFAGOR_KHALIFA_SIGNAL(inputSignal);
             logger.logTgBot(I18nSupport.i18n_literals("pifagor.khalifa.signal.floor", pifagorKhalifaSignal.getFloor(), pifagorKhalifaSignal.getClose()));
 
             if (strategyProps.isDebugMode()) {
@@ -92,7 +92,7 @@ public class MFI_BigGuyHandler extends StrategyHandler {
                 && pifagorMfiSignal != null
                 && pifagorMfiSignal.getTicker().equals(strategyProps.getTicker())
                 && pifagorMfiSignal.getInterval() == INTERVAL_5m
-                && pifagorMfiSignal.getAction().equals(PIFAGOR_MFI_Signal.Action.STRONG_BUY)
+                && pifagorMfiSignal.getAction().equals(PIFAGOR_MFI_SIGNAL.Action.STRONG_BUY)
                 && currIndex - 1 == getCandlestickIndex(pifagorMfiSignal.getTime(), INTERVAL_5m)) {
             Position position = requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG);
 
