@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TelegramTradeBot extends AbilityBot {
     private final static String STRATEGY_DB = "strategies";
@@ -54,7 +55,11 @@ public class TelegramTradeBot extends AbilityBot {
         Map<String, StrategyProps> strategies = db.getMap(STRATEGY_DB);
 
         for (String ticker : strategies.keySet()) {
-            enableStrategy(ticker, strategies.get(ticker));
+            try {
+                enableStrategy(ticker, strategies.get(ticker));
+            } catch (IllegalArgumentException|NullPointerException exception) {
+                asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("error.occured", exception), creatorId);
+            }
         }
     }
 
@@ -81,12 +86,11 @@ public class TelegramTradeBot extends AbilityBot {
                         enableStrategy(ctx.secondArg(), new StrategyProps(Strategy.valueOf(ctx.firstArg()),
                                 ctx.secondArg(),
                                 Boolean.parseBoolean(ctx.arguments()[2]),
-                                ctx.arguments()[3], Arrays.asList(ctx.chatId())));
+                                ctx.arguments()[3], Stream.of(ctx.chatId()).collect(Collectors.toList())));
 
                         asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("strategy.enabled"), ctx.chatId());
-                    } catch (IllegalArgumentException illegalArgumentException) {
-                        illegalArgumentException.printStackTrace();
-                        asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("error.occured", illegalArgumentException), ctx.chatId());
+                    } catch (IllegalArgumentException|NullPointerException exception) {
+                        asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("error.occured", exception), ctx.chatId());
                     }
                 })
                 .build();
@@ -255,7 +259,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .build();
     }
 
-    public void enableStrategy(String ticker, StrategyProps strategyProps) throws IllegalArgumentException{
+    public void enableStrategy(String ticker, StrategyProps strategyProps) throws IllegalArgumentException, NullPointerException {
         Strategy strategy = strategyProps.getStrategy();
 
         if (strategy.equals(Strategy.MFI_BIG_GUY)) {

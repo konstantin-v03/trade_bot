@@ -13,7 +13,9 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ChiaAlarmHandler extends StrategyHandler {
@@ -23,9 +25,9 @@ public class ChiaAlarmHandler extends StrategyHandler {
     private final String address;
 
     private final OkHttpClient client;
-    private double lastXch = -1;
+    private BigDecimal lastXch;
 
-    public ChiaAlarmHandler(RequestSender requestSender, StrategyProps strategyProps, AsyncSender asyncSender) throws IllegalArgumentException {
+    public ChiaAlarmHandler(RequestSender requestSender, StrategyProps strategyProps, AsyncSender asyncSender) throws IllegalArgumentException, NullPointerException {
         super(requestSender, strategyProps, asyncSender);
         address = strategyProps.getProperties().getProperty("address");
         alias = strategyProps.getProperties().getProperty("alias");
@@ -43,40 +45,29 @@ public class ChiaAlarmHandler extends StrategyHandler {
             }
 
             JSONObject responseJSON = new JSONObject(new BufferedReader(
-                    new InputStreamReader(response.body().byteStream(), StandardCharsets.UTF_8))
+                    new InputStreamReader(Objects.requireNonNull(response.body()).byteStream(), StandardCharsets.UTF_8))
                     .lines()
                     .collect(Collectors.joining("\n")));
 
-            double xch = responseJSON.getDouble("xch");
+            BigDecimal xch = responseJSON.getBigDecimal("xch");
 
-            if (lastXch == -1) {
+            if (lastXch == null) {
                 lastXch = xch;
             }
 
-            if (xch != lastXch) {
-                if (xch > lastXch) {
-                    logger.logTgBot(I18nSupport.i18n_literals("chia.balance.changed",
-                            alias,
-                            String.format("%.1f", xch),
-                            "+" + String.format("%.1f", xch - lastXch)));
-                }
-
-                if (xch < lastXch) {
-                    if (xch == 0) {
-                        logger.log$pinTgBot(I18nSupport.i18n_literals("chia.balance.changed",
-                                alias,
-                                String.format("%.1f", xch),
-                                "-" + String.format("%.1f", lastXch - xch)));
-                    } else {
-                        logger.logTgBot(I18nSupport.i18n_literals("chia.balance.changed",
-                                alias,
-                                String.format("%.1f", xch),
-                                "-" + String.format("%.1f", lastXch - xch)));
-                    }
-                }
-
-                lastXch = xch;
+            if (xch.compareTo(lastXch) > 0) {
+                logger.logTgBot(I18nSupport.i18n_literals("chia.balance.changed",
+                        alias,
+                        String.format("%.1f", xch),
+                        "+" + String.format("%.1f", xch.subtract(lastXch))));
+            } else if (xch.compareTo(lastXch) < 0) {
+                logger.log$pinTgBot(I18nSupport.i18n_literals("chia.balance.changed",
+                        alias,
+                        String.format("%.1f", xch),
+                        "-" + String.format("%.1f", lastXch.subtract(xch))));
             }
+
+            lastXch = xch;
         });
     }
 

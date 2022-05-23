@@ -2,6 +2,7 @@ package com.strategies;
 
 import com.futures.dualside.RequestSender;
 import com.signal.ALARM_SIGNAL;
+import com.signal.STRATEGY_ALARM;
 import com.signal.Signal;
 import com.tgbot.AsyncSender;
 import com.utils.I18nSupport;
@@ -59,35 +60,45 @@ public class AlarmHandler extends StrategyHandler {
     public void process(JSONObject inputSignal) throws JSONException, IllegalArgumentException {
         Class<?> signalClass = Signal.getSignalClass(inputSignal);
 
-        ALARM_SIGNAL alarmSignal;
-
         if (signalClass == ALARM_SIGNAL.class) {
-            alarmSignal = new ALARM_SIGNAL(inputSignal);
+            ALARM_SIGNAL alarmSignal = new ALARM_SIGNAL(inputSignal);
+
+            ALARM_SIGNAL.Indicator indicator = alarmSignal.getIndicator();
+            ALARM_SIGNAL.Option option = alarmSignal.getOption();
+
+            if (option.equals(ALARM_SIGNAL.Option.ONCE_PER_MINUTE)) {
+                dailyOncePerMinuteCount.putIfAbsent(indicator, 0);
+                logger.logTgBot(I18nSupport.i18n_literals("alarm.once.per.minute",
+                        strategyProps.getTicker(),
+                        alarmSignal.getExchange(),
+                        indicator.ordinal(),
+                        indicator.alias(),
+                        Utils.intToInterval(alarmSignal.getInterval())));
+                dailyOncePerMinuteCount.put(indicator, dailyOncePerMinuteCount.get(indicator) + 1);
+            } else if (option.equals(ALARM_SIGNAL.Option.ONCE_PER_BAR_CLOSE)){
+                logger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.bar.close",
+                        strategyProps.getTicker(),
+                        alarmSignal.getExchange(),
+                        indicator.ordinal(),
+                        indicator.alias(),
+                        Utils.intToInterval(alarmSignal.getInterval())));
+            } else {
+                throw new IllegalArgumentException();
+            }
+        } else if (signalClass == STRATEGY_ALARM.class){
+            STRATEGY_ALARM strategyAlarmSignal = new STRATEGY_ALARM(inputSignal);
+
+            STRATEGY_ALARM.Indicator indicator = strategyAlarmSignal.getIndicator();
+            STRATEGY_ALARM.Action action = strategyAlarmSignal.getAction();
+
+            logger.logTgBot(I18nSupport.i18n_literals("strategy.alarm",
+                    strategyProps.getTicker(),
+                    strategyAlarmSignal.getExchange(),
+                    indicator.alias(),
+                    action.alias(),
+                    strategyAlarmSignal.getClose()));
         } else {
             throw new JSONException(I18nSupport.i18n_literals("unsupported.signal.exception"));
-        }
-
-        ALARM_SIGNAL.Indicator indicator = alarmSignal.getIndicator();
-        ALARM_SIGNAL.Option option = alarmSignal.getOption();
-
-        if (option.equals(ALARM_SIGNAL.Option.ONCE_PER_MINUTE)) {
-            dailyOncePerMinuteCount.putIfAbsent(indicator, 0);
-            logger.logTgBot(I18nSupport.i18n_literals("alarm.once.per.minute",
-                    strategyProps.getTicker(),
-                    alarmSignal.getExchange(),
-                    indicator.ordinal(),
-                    indicator.alias(),
-                    Utils.intToInterval(alarmSignal.getInterval())));
-            dailyOncePerMinuteCount.put(indicator, dailyOncePerMinuteCount.get(indicator) + 1);
-        } else if (option.equals(ALARM_SIGNAL.Option.ONCE_PER_BAR_CLOSE)){
-            logger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.bar.close",
-                    strategyProps.getTicker(),
-                    alarmSignal.getExchange(),
-                    indicator.ordinal(),
-                    indicator.alias(),
-                    Utils.intToInterval(alarmSignal.getInterval())));
-        } else {
-            throw new IllegalArgumentException();
         }
     }
 

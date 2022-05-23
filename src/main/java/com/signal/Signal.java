@@ -69,11 +69,25 @@ public abstract class Signal {
             return PIFAGOR_MFI_SIGNAL.class;
         } else if (indicatorType.equals(PIFAGOR_ALTCOINS_SIGNAL.TYPE)) {
             return PIFAGOR_ALTCOINS_SIGNAL.class;
-        } else if (Arrays.asList(ALARM_SIGNAL.Indicator.values()).contains(ALARM_SIGNAL.Indicator.valueOf(indicatorType))) {
-            return ALARM_SIGNAL.class;
-        } else {
-            throw new JSONException(I18nSupport.i18n_literals("unsupported.signal.exception"));
         }
+
+        try {
+            if (Arrays.asList(ALARM_SIGNAL.Indicator.values()).contains(ALARM_SIGNAL.Indicator.valueOf(indicatorType))) {
+                return ALARM_SIGNAL.class;
+            }
+        } catch (IllegalArgumentException ignored) {
+
+        }
+
+        try {
+            if (Arrays.asList(STRATEGY_ALARM.Indicator.values()).contains(STRATEGY_ALARM.Indicator.valueOf(indicatorType))) {
+                return STRATEGY_ALARM.class;
+            }
+        } catch (IllegalArgumentException ignored) {
+
+        }
+
+        throw new JSONException(I18nSupport.i18n_literals("unsupported.signal.exception"));
     }
 
     @Override
