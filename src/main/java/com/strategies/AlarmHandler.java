@@ -5,6 +5,7 @@ import com.signal.ALARM_SIGNAL;
 import com.signal.STRATEGY_ALARM;
 import com.signal.Signal;
 import com.tgbot.AsyncSender;
+import com.utils.Constants;
 import com.utils.I18nSupport;
 import com.utils.Scheduler;
 import com.utils.Utils;
@@ -26,34 +27,41 @@ public class AlarmHandler extends StrategyHandler {
         super(requestSender, strategyProps, asyncSender);
 
         dailyOncePerMinuteCount = new ConcurrentHashMap<>();
-        scheduler = Scheduler.scheduleEveryDayAtFixedTime(() -> {
-            Map<ALARM_SIGNAL.Indicator, Integer> dailyOncePerMinuteCountTemp = dailyOncePerMinuteCount;
-            dailyOncePerMinuteCount = new ConcurrentHashMap<>();
+        String schedulerProperty = strategyProps.getProperties().getProperty(Constants.SCHEDULER);
 
-            Integer count;
+        if (Boolean.parseBoolean(schedulerProperty)) {
+            scheduler = Scheduler.scheduleEveryDayAtFixedTime(() -> {
+                Map<ALARM_SIGNAL.Indicator, Integer> dailyOncePerMinuteCountTemp = dailyOncePerMinuteCount;
+                dailyOncePerMinuteCount = new ConcurrentHashMap<>();
 
-            if (dailyOncePerMinuteCountTemp.keySet().size() > 0) {
-                for (ALARM_SIGNAL.Indicator indicator : dailyOncePerMinuteCountTemp.keySet()) {
-                    count = dailyOncePerMinuteCountTemp.get(indicator);
+                Integer count;
 
-                    logger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.minute.count",
-                            strategyProps.getTicker(),
-                            indicator.ordinal(),
-                            indicator.alias(),
-                            count));
+                if (dailyOncePerMinuteCountTemp.keySet().size() > 0) {
+                    for (ALARM_SIGNAL.Indicator indicator : dailyOncePerMinuteCountTemp.keySet()) {
+                        count = dailyOncePerMinuteCountTemp.get(indicator);
 
-                    try {
-                        Utils.appendStrToFile(getOncePerMinuteCountLogFileName(indicator),
-                                LocalDate.now().minusDays(1).format(DateTimeFormatter
-                                        .ofLocalizedDate(FormatStyle.SHORT)) + " " + count + "\n");
-                    } catch (IOException ioException) {
-                        logger.logException(ioException);
+                        logger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.minute.count",
+                                strategyProps.getTicker(),
+                                indicator.ordinal(),
+                                indicator.alias(),
+                                count));
+
+                        try {
+                            Utils.appendStrToFile(getOncePerMinuteCountLogFileName(indicator),
+                                    LocalDate.now().minusDays(1).format(DateTimeFormatter
+                                            .ofLocalizedDate(FormatStyle.SHORT)) + " " + count + "\n");
+                        } catch (IOException ioException) {
+                            logger.logException(ioException);
+                        }
                     }
+                } else {
+                    logger.logTgBot(I18nSupport.i18n_literals("no.alarm.per.minute", strategyProps.getTicker()));
                 }
-            } else {
-                logger.logTgBot(I18nSupport.i18n_literals("no.alarm.per.minute", strategyProps.getTicker()));
-            }
-        }, 0, 0, 0);
+            }, 0, 0, 0);
+        } else {
+            strategyProps.getProperties().put(Constants.SCHEDULER, Boolean.TRUE.toString());
+            scheduler = null;
+        }
     }
 
     @Override
@@ -104,7 +112,9 @@ public class AlarmHandler extends StrategyHandler {
 
     @Override
     public void close() {
-        scheduler.shutdown();
+        if (scheduler != null) {
+            scheduler.shutdown();
+        }
     }
 
     public static String getOncePerMinuteCountLogFileName(ALARM_SIGNAL.Indicator indicator) {
