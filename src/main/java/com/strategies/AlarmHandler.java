@@ -59,7 +59,7 @@ public class AlarmHandler extends StrategyHandler {
                 }
             }, 0, 0, 0);
         } else {
-            strategyProps.getProperties().put(Constants.SCHEDULER, Boolean.TRUE.toString());
+            strategyProps.getProperties().put(Constants.SCHEDULER, Boolean.FALSE.toString());
             scheduler = null;
         }
     }
