@@ -83,10 +83,12 @@ public class TelegramTradeBot extends AbilityBot {
                 .input(4)
                 .action(ctx -> {
                     try {
-                        enableStrategy(ctx.secondArg(), new StrategyProps(Strategy.valueOf(ctx.firstArg()),
-                                ctx.secondArg(),
-                                Boolean.parseBoolean(ctx.arguments()[2]),
-                                ctx.arguments()[3], Stream.of(ctx.chatId()).collect(Collectors.toList())));
+                        for (String ticker : ctx.secondArg().split(",")) {
+                            enableStrategy(ticker, new StrategyProps(Strategy.valueOf(ctx.firstArg()),
+                                    ticker,
+                                    Boolean.parseBoolean(ctx.arguments()[2]),
+                                    ctx.arguments()[3], Stream.of(ctx.chatId()).collect(Collectors.toList())));
+                        }
 
                         asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("strategy.enabled"), ctx.chatId());
                     } catch (IllegalArgumentException|NullPointerException exception) {
@@ -137,18 +139,37 @@ public class TelegramTradeBot extends AbilityBot {
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
                 .input(0)
-                .action(ctx -> asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("enabled.strategies",
-                        enabledStrategies.values().stream().map(strategyHandler -> {
-                            StrategyProps strategyProps = strategyHandler.getStrategyProps();
+                .action(ctx -> {
+                    int i = 1;
+                    StringBuilder stringBuilder = new StringBuilder()
+                            .append(I18nSupport.i18n_literals("enabled.strategies", i))
+                            .append("\n\n");
+                    String enabledStrategyStr;
 
-                            return I18nSupport.i18n_literals("enabled.strategy",
-                                    strategyProps.getTicker(),
-                                    strategyProps.getStrategy(),
-                                    strategyProps.getLogChatIds().stream().map(chatId ->
-                                            "<code>" + chatId + "</code>").collect(Collectors.joining("\n")),
-                                    strategyProps.isDebugMode() ? 0 : 1,
-                                    strategyProps.getProperties());
-                        }).collect(Collectors.joining("\n\n"))), ctx.chatId()))
+                    for (StrategyProps strategyProps : enabledStrategies
+                            .values()
+                            .stream()
+                            .map(StrategyHandler::getStrategyProps)
+                            .collect(Collectors.toList())) {
+                        enabledStrategyStr = I18nSupport.i18n_literals("enabled.strategy",
+                                strategyProps.getTicker(),
+                                strategyProps.getStrategy(),
+                                strategyProps.getLogChatIds().stream().map(chatId ->
+                                        "<code>" + chatId + "</code>").collect(Collectors.joining("\n")),
+                                strategyProps.isDebugMode() ? 0 : 1,
+                                strategyProps.getProperties()) + "\n\n";
+
+                        if (stringBuilder.toString().length() + enabledStrategyStr.length() > 4096) {
+                            asyncSender.sendTextMsgAsync(stringBuilder.toString(), ctx.chatId());
+                            stringBuilder.setLength(0);
+                            stringBuilder.append(I18nSupport.i18n_literals("enabled.strategies", ++i)).append("\n\n");
+                        }
+
+                        stringBuilder.append(enabledStrategyStr);
+                    }
+
+                    asyncSender.sendTextMsgAsync(stringBuilder.toString(), ctx.chatId());
+                })
                 .build();
     }
 
