@@ -8,8 +8,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 public final class PIFAGOR_ALTCOINS_SIGNAL extends Signal {
-    public static final String TYPE = I18nSupport.i18n_literals("pifagor.altcoins");
-
     public enum Action {
         BUY, SELL
     }

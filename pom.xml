@@ -4,7 +4,7 @@
 
     <groupId>com.binance.sdk</groupId>
     <artifactId>binance-client</artifactId>
-    <version>6.44</version>
+    <version>7.0</version>
 
     <properties>
         <java.version>1.8</java.version>
@@ -19,7 +19,7 @@
         <dependency>
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots-abilities</artifactId>
-            <version>5.7.1</version>
+            <version>6.0.1</version><!--5.7.1-->
         </dependency>
     </dependencies>
 

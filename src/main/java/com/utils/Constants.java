@@ -12,6 +12,9 @@ public class Constants {
     public static final String STOP_LOSS_STR = "stopLoss";
     public static final String AMOUNT_STR = "amount";
     public static final String LEVERAGE_STR = "leverage";
-    public static final String LOG_CHAT_IDS_STR = "logchatids";
-    public static final String SCHEDULER = "scheduler";
+    public static final String LOG_CHAT_IDS_STR = "logChatIds";
+    public static final String SCHEDULER_STR = "scheduler";
+    public static final String DEBUG_MODE_STR = "debugMode";
+
+    public static final String NULL = "null";
 }

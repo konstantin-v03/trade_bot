@@ -1,6 +1,7 @@
 package com.strategies;
 
 import com.futures.dualside.RequestSender;
+import com.signal.Indicator;
 import com.tgbot.AsyncSender;
 import com.utils.I18nSupport;
 import com.utils.Scheduler;
@@ -29,8 +30,8 @@ public class ChiaAlarmHandler extends StrategyHandler {
 
     public ChiaAlarmHandler(RequestSender requestSender, StrategyProps strategyProps, AsyncSender asyncSender) throws IllegalArgumentException, NullPointerException {
         super(requestSender, strategyProps, asyncSender);
-        address = strategyProps.getProperties().getProperty("address");
-        alias = strategyProps.getProperties().getProperty("alias");
+        address = strategyProps.getProperties().get("address");
+        alias = strategyProps.getProperties().get("alias");
         client = new OkHttpClient();
 
         scheduler = Scheduler.scheduleEveryMinute(() -> {
@@ -72,8 +73,13 @@ public class ChiaAlarmHandler extends StrategyHandler {
     }
 
     @Override
-    public void process(JSONObject inputSignal) throws JSONException, IllegalArgumentException {
+    public void process(Indicator indicator, JSONObject inputSignal) throws JSONException, IllegalArgumentException {
         logger.logTgBot(I18nSupport.i18n_literals("unsupported.signal.exception"));
+    }
+
+    @Override
+    public boolean isSupportedSignal(Class<?> signal, String ticker) {
+        return false;
     }
 
     @Override

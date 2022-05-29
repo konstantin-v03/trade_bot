@@ -4,6 +4,7 @@ import com.binance.client.model.trade.MyTrade;
 import com.binance.client.model.trade.Position;
 import com.futures.TP_SL;
 import com.futures.dualside.RequestSender;
+import com.signal.Indicator;
 import com.tgbot.AsyncSender;
 import com.utils.Calculations;
 import com.utils.I18nSupport;
@@ -26,13 +27,15 @@ public abstract class StrategyHandler {
         logger = new Logger(asyncSender);
     }
 
-    public abstract void process(JSONObject inputSignal) throws JSONException, IllegalArgumentException;
+    public abstract void process(Indicator indicator, JSONObject inputRequest) throws JSONException, IllegalArgumentException;
 
     public abstract void close();
 
     public StrategyProps getStrategyProps() {
         return strategyProps;
     }
+
+    public abstract boolean isSupportedSignal(Class<?> signal, String ticker);
 
     class Logger {
         private final AsyncSender asyncSender;

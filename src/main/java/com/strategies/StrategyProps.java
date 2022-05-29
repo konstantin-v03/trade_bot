@@ -1,9 +1,7 @@
 package com.strategies;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.utils.Constants.LOG_CHAT_IDS_STR;
@@ -12,52 +10,49 @@ public class StrategyProps implements Serializable {
     private static final long serialVersionUID = 835489771410264765L;
 
     private final Strategy strategy;
-    private final String ticker;
-    private final boolean debugMode;
-    private final Properties properties = new Properties();
-    private List<Long> logChatIds;
+    private final List<String> tickers;
+    private final Map<String, String> properties;
+    private final List<Long> logChatIds;
 
-    public StrategyProps(Strategy strategy, String ticker, boolean debugMode, String propertiesString, List<Long> logChatIds) {
+    public StrategyProps(Strategy strategy, List<String> tickers, String propertiesString, long chatId) {
         this.strategy = strategy;
-        this.ticker = ticker;
-        this.debugMode = debugMode;
+        this.tickers = Collections.unmodifiableList(tickers == null ? new ArrayList<>() : tickers);
 
-        try {
-            for (String[] keyValue : Arrays.stream(propertiesString.split(";"))
+        Map<String, String> properties = new HashMap<>();
+
+        if (propertiesString != null) {
+            Arrays.stream(propertiesString.split(";"))
                     .map(str -> str.split("="))
-                    .collect(Collectors.toList())) {
-                properties.put(keyValue[0], keyValue[1]);
+                    .forEach(keyValue -> {
+                        if (keyValue.length == 2) {
+                            properties.put(keyValue[0], keyValue[1]);
+                        }
+                    });
+
+            if (properties.size() == 0) {
+                throw new IllegalArgumentException("Illegal properties!");
             }
-
-            String logChatIdsPropertyString = properties.getProperty(LOG_CHAT_IDS_STR);
-            List<Long> logChatIdsProperty;
-
-            if (logChatIdsPropertyString != null && (logChatIdsProperty =
-                    Arrays.stream(logChatIdsPropertyString.split(","))
-                    .map(Long::valueOf)
-                    .collect(Collectors.toList())).size() > 0) {
-                this.logChatIds = logChatIdsProperty;
-            } else {
-                this.logChatIds = logChatIds;
-            }
-        } catch (ArrayIndexOutOfBoundsException ignored) {
-
         }
+
+        this.properties = Collections.unmodifiableMap(properties);
+
+        logChatIds = Arrays
+                .stream(Optional.ofNullable(properties.get(LOG_CHAT_IDS_STR))
+                        .orElse(String.valueOf(chatId))
+                        .split(","))
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
     }
 
     public Strategy getStrategy() {
         return strategy;
     }
 
-    public String getTicker() {
-        return ticker;
+    public List<String> getTickers() {
+        return tickers;
     }
 
-    public boolean isDebugMode() {
-        return debugMode;
-    }
-
-    public Properties getProperties() {
+    public Map<String, String> getProperties() {
         return properties;
     }
 
@@ -70,6 +65,7 @@ public class StrategyProps implements Serializable {
     }
 
     public void setLogChatId(List<Long> logChatIds) {
-        this.logChatIds = logChatIds;
+        this.logChatIds.clear();
+        this.logChatIds.addAll(logChatIds);
     }
 }

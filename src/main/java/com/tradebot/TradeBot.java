@@ -3,6 +3,7 @@ package com.tradebot;
 import com.binance.client.SyncRequestClient;
 import com.futures.dualside.RequestSender;
 import com.server.WebhookReceiver;
+import com.signal.Indicator;
 import com.strategies.StrategyHandler;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -16,12 +17,11 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 public class TradeBot implements HttpHandler {
     private final TelegramTradeBot telegramTradeBot;
-    private final Map<String, StrategyHandler> enabledStrategies;
+    private final List<StrategyHandler> enabledStrategies;
 
     public TradeBot(String webhookRequestContext,
                     String binanceApiKey,
@@ -30,7 +30,7 @@ public class TradeBot implements HttpHandler {
                     String tgBotUsername,
                     long tgBotCreatorId) throws TelegramApiException, GeneralSecurityException, IOException {
         TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
-        enabledStrategies = new ConcurrentHashMap<>();
+        enabledStrategies = Collections.synchronizedList(new LinkedList<>());
         api.registerBot((telegramTradeBot = new TelegramTradeBot(tgBotToken,
                 tgBotUsername,
                 tgBotCreatorId,
@@ -52,12 +52,18 @@ public class TradeBot implements HttpHandler {
     public void process(String inputSignal) {
         try {
             JSONObject inputRequest = new JSONObject(inputSignal);
+            String ticker = inputRequest.getString(I18nSupport.i18n_literals("ticker"));
+            Indicator indicator = Indicator.from(inputRequest);
+            Set<Class<?>> signals = indicator.getSignals();
 
-            StrategyHandler strategyHandler = enabledStrategies.get(inputRequest.getString("ticker"));
-
-            if (strategyHandler != null) {
-                strategyHandler.process(inputRequest);
+            for (StrategyHandler strategyHandler : enabledStrategies) {
+                for (Class<?> signal : signals) {
+                    if (strategyHandler.isSupportedSignal(signal, ticker)) {
+                        strategyHandler.process(indicator, inputRequest);
+                    }
+                }
             }
+
         } catch (RuntimeException exception) {
             telegramTradeBot.asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("error.occured", exception), telegramTradeBot.creatorId());
         }

@@ -7,9 +7,7 @@ import com.binance.client.model.trade.Position;
 import com.futures.Amount;
 import com.futures.TP_SL;
 import com.futures.dualside.RequestSender;
-import com.signal.PIFAGOR_KHALIFA_SIGNAL;
-import com.signal.PIFAGOR_MFI_SIGNAL;
-import com.signal.Signal;
+import com.signal.*;
 import com.tgbot.AsyncSender;
 import com.utils.Constants;
 import com.utils.I18nSupport;
@@ -19,6 +17,7 @@ import org.json.JSONObject;
 
 import java.util.*;
 
+import static com.utils.Constants.DEBUG_MODE_STR;
 import static com.utils.Constants.INTERVAL_5m;
 import static com.utils.Utils.getCandlestickIndex;
 
@@ -28,6 +27,7 @@ public class MFI_BigGuyHandler extends StrategyHandler {
     private PIFAGOR_KHALIFA_SIGNAL pifagorKhalifaSignal;
 
     private final Amount amount;
+    private final String ticker;
     private final int leverage;
     private final int takeProfit;
     private final int stopLoss;
@@ -40,12 +40,15 @@ public class MFI_BigGuyHandler extends StrategyHandler {
     public MFI_BigGuyHandler(RequestSender requestSender, StrategyProps strategyProps, AsyncSender asyncSender) throws IllegalArgumentException {
         super(requestSender, strategyProps, asyncSender);
 
-        Properties properties = strategyProps.getProperties();
+        if (strategyProps.getTickers().size() != 1) {
+            throw new IllegalArgumentException(I18nSupport.i18n_literals("tickers.size.must.be.one"));
+        }
 
-        amount = new Amount(properties.getProperty(Constants.AMOUNT_STR));
-        leverage = Integer.parseInt(properties.getProperty(Constants.LEVERAGE_STR));
-        takeProfit = Integer.parseInt(properties.getProperty(Constants.TAKE_PROFIT_STR));
-        stopLoss = Integer.parseInt(properties.getProperty(Constants.STOP_LOSS_STR));
+        ticker = strategyProps.getTickers().get(0);
+        amount = new Amount(strategyProps.getProperties().get(Constants.AMOUNT_STR));
+        leverage = Integer.parseInt(strategyProps.getProperties().get(Constants.LEVERAGE_STR));
+        takeProfit = Integer.parseInt(strategyProps.getProperties().get(Constants.TAKE_PROFIT_STR));
+        stopLoss = Integer.parseInt(strategyProps.getProperties().get(Constants.STOP_LOSS_STR));
 
         timer.schedule(new TimerTask() {
             public void run() {
@@ -57,25 +60,23 @@ public class MFI_BigGuyHandler extends StrategyHandler {
     }
 
     @Override
-    public synchronized void process(JSONObject inputSignal) throws JSONException, IllegalArgumentException {
+    public synchronized void process(Indicator indicator, JSONObject inputSignal) throws JSONException, IllegalArgumentException {
         int currIndex = getCandlestickIndex(new Date(), INTERVAL_5m);
 
-        Class<?> signalClass = Signal.getSignalClass(inputSignal);
-
-        if (signalClass == PIFAGOR_MFI_SIGNAL.class) {
+        if (indicator.equals(Indicator.PIFAGOR_MFI)) {
             pifagorMfiSignal = new PIFAGOR_MFI_SIGNAL(inputSignal);
             logger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.signal", pifagorMfiSignal.getAction().toString(), pifagorMfiSignal.getClose()));
 
-            if (strategyProps.isDebugMode()) {
+            if (Boolean.parseBoolean(strategyProps.getProperties().get(DEBUG_MODE_STR))) {
                 logger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.big.guy.debug",
                             currIndex,
                             pifagorMfiSignal.toString()));
             }
-        } else if (signalClass == PIFAGOR_KHALIFA_SIGNAL.class) {
+        } else if (indicator.equals(Indicator.PIFAGOR_KHALIFA)) {
             pifagorKhalifaSignal = new PIFAGOR_KHALIFA_SIGNAL(inputSignal);
             logger.logTgBot(I18nSupport.i18n_literals("pifagor.khalifa.signal.floor", pifagorKhalifaSignal.getFloor(), pifagorKhalifaSignal.getClose()));
 
-            if (strategyProps.isDebugMode()) {
+            if (Boolean.parseBoolean(strategyProps.getProperties().get(DEBUG_MODE_STR))) {
                 logger.logTgBot(I18nSupport.i18n_literals("pifagor.mfi.big.guy.debug",
                             currIndex,
                             pifagorKhalifaSignal.toString()));
@@ -85,47 +86,53 @@ public class MFI_BigGuyHandler extends StrategyHandler {
         }
 
         if (pifagorKhalifaSignal != null
-                && pifagorKhalifaSignal.getTicker().equals(strategyProps.getTicker())
+                && pifagorKhalifaSignal.getTicker().equals(ticker)
                 && pifagorKhalifaSignal.getInterval() == INTERVAL_5m
                 && pifagorKhalifaSignal.getFloor() == 3
                 && currIndex - 1 == getCandlestickIndex(pifagorKhalifaSignal.getTime(), INTERVAL_5m)
                 && pifagorMfiSignal != null
-                && pifagorMfiSignal.getTicker().equals(strategyProps.getTicker())
+                && pifagorMfiSignal.getTicker().equals(ticker)
                 && pifagorMfiSignal.getInterval() == INTERVAL_5m
                 && pifagorMfiSignal.getAction().equals(PIFAGOR_MFI_SIGNAL.Action.STRONG_BUY)
                 && currIndex - 1 == getCandlestickIndex(pifagorMfiSignal.getTime(), INTERVAL_5m)) {
-            Position position = requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG);
+            Position position = requestSender.getPosition(ticker, PositionSide.LONG);
 
             if (position == null) {
-                requestSender.openLongPositionMarket(strategyProps.getTicker(), MarginType.ISOLATED, amount, leverage);
-                requestSender.cancelOrders(strategyProps.getTicker());
+                requestSender.openLongPositionMarket(ticker, MarginType.ISOLATED, amount, leverage);
+                requestSender.cancelOrders(ticker);
 
                 synchronized (lock) {
-                    logger.logTP_SLOrders(tp_sl = requestSender.postTP_SLOrders(strategyProps.getTicker(),
+                    logger.logTP_SLOrders(tp_sl = requestSender.postTP_SLOrders(ticker,
                             PositionSide.LONG,
                             takeProfit,
                             stopLoss));
                 }
 
                 Utils.sleep(1000);
-                logger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG));
+                logger.logOpenPosition(requestSender.getPosition(ticker, PositionSide.LONG));
             } else {
                 logger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.LONG, position.getEntryPrice()));
             }
         }
     }
 
+    @Override
+    public boolean isSupportedSignal(Class<?> signal, String ticker) {
+        return this.ticker.equals(ticker) &&
+                (signal.equals(PIFAGOR_MFI_SIGNAL.class) || signal.equals(PIFAGOR_KHALIFA_SIGNAL.class));
+    }
+
     private void logTP_SL() {
         List<MyTrade> stopLoss, takeProfit;
 
         synchronized (lock) {
-            if (tp_sl.getStopLossOrder() != null && (stopLoss = requestSender.getMyTrades(strategyProps.getTicker(),
+            if (tp_sl.getStopLossOrder() != null && (stopLoss = requestSender.getMyTrades(ticker,
                     tp_sl.getStopLossOrder().getOrderId())) != null) {
                 logger.logClosePosition(stopLoss);
                 logger.logCloseLogToFile(Strategy.MFI_BIG_GUY, stopLoss);
             }
 
-            if (tp_sl.getTakeProfitOrder() != null && (takeProfit = requestSender.getMyTrades(strategyProps.getTicker(),
+            if (tp_sl.getTakeProfitOrder() != null && (takeProfit = requestSender.getMyTrades(ticker,
                     tp_sl.getTakeProfitOrder().getOrderId())) != null) {
                 logger.logClosePosition(takeProfit);
                 logger.logCloseLogToFile(Strategy.MFI_BIG_GUY, takeProfit);

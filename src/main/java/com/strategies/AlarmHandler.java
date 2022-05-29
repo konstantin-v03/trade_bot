@@ -2,8 +2,8 @@ package com.strategies;
 
 import com.futures.dualside.RequestSender;
 import com.signal.ALARM_SIGNAL;
-import com.signal.STRATEGY_ALARM;
-import com.signal.Signal;
+import com.signal.Indicator;
+import com.signal.STRATEGY_ALARM_SIGNAL;
 import com.tgbot.AsyncSender;
 import com.utils.Constants;
 import com.utils.I18nSupport;
@@ -11,6 +11,7 @@ import com.utils.Scheduler;
 import com.utils.Utils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.telegram.abilitybots.api.util.Pair;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -21,33 +22,33 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AlarmHandler extends StrategyHandler {
     private final Scheduler scheduler;
-    private Map<ALARM_SIGNAL.Indicator, Integer> dailyOncePerMinuteCount;
+    private Map<Pair<Indicator, String>, Integer> dailyOncePerMinuteCount;
 
     public AlarmHandler(RequestSender requestSender, StrategyProps strategyProps, AsyncSender asyncSender) {
         super(requestSender, strategyProps, asyncSender);
 
         dailyOncePerMinuteCount = new ConcurrentHashMap<>();
-        String schedulerProperty = strategyProps.getProperties().getProperty(Constants.SCHEDULER);
+        String schedulerProperty = strategyProps.getProperties().get(Constants.SCHEDULER_STR);
 
         if (Boolean.parseBoolean(schedulerProperty)) {
             scheduler = Scheduler.scheduleEveryDayAtFixedTime(() -> {
-                Map<ALARM_SIGNAL.Indicator, Integer> dailyOncePerMinuteCountTemp = dailyOncePerMinuteCount;
+                Map<Pair<Indicator, String>, Integer> dailyOncePerMinuteCountTemp = dailyOncePerMinuteCount;
                 dailyOncePerMinuteCount = new ConcurrentHashMap<>();
 
                 Integer count;
 
                 if (dailyOncePerMinuteCountTemp.keySet().size() > 0) {
-                    for (ALARM_SIGNAL.Indicator indicator : dailyOncePerMinuteCountTemp.keySet()) {
-                        count = dailyOncePerMinuteCountTemp.get(indicator);
+                    for (Pair<Indicator, String> indicatorTickerPair : dailyOncePerMinuteCountTemp.keySet()) {
+                        count = dailyOncePerMinuteCountTemp.get(indicatorTickerPair);
 
-                        logger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.minute.count",
-                                strategyProps.getTicker(),
-                                indicator.ordinal(),
-                                indicator.alias(),
+                        logger.logTgBot(I18nSupport.i18n_literals("alarm.once.per.minute.count",
+                                indicatorTickerPair.b(),
+                                indicatorTickerPair.a().ordinal(),
+                                indicatorTickerPair.a().alias(),
                                 count));
 
                         try {
-                            Utils.appendStrToFile(getOncePerMinuteCountLogFileName(indicator),
+                            Utils.appendStrToFile(getOncePerMinuteCountLogFileName(indicatorTickerPair.a()),
                                     LocalDate.now().minusDays(1).format(DateTimeFormatter
                                             .ofLocalizedDate(FormatStyle.SHORT)) + " " + count + "\n");
                         } catch (IOException ioException) {
@@ -55,58 +56,52 @@ public class AlarmHandler extends StrategyHandler {
                         }
                     }
                 } else {
-                    logger.logTgBot(I18nSupport.i18n_literals("no.alarm.per.minute", strategyProps.getTicker()));
+                    logger.logTgBot(I18nSupport.i18n_literals("no.alarm.per.minute"));
                 }
             }, 0, 0, 0);
         } else {
-            strategyProps.getProperties().put(Constants.SCHEDULER, Boolean.FALSE.toString());
             scheduler = null;
         }
     }
 
     @Override
-    public void process(JSONObject inputSignal) throws JSONException, IllegalArgumentException {
-        Class<?> signalClass = Signal.getSignalClass(inputSignal);
+    public void process(Indicator indicator, JSONObject inputSignal) throws JSONException, IllegalArgumentException {
+        if (indicator.isStrategy()) {
+            STRATEGY_ALARM_SIGNAL strategyAlarmSignal = new STRATEGY_ALARM_SIGNAL(inputSignal);
+            STRATEGY_ALARM_SIGNAL.Action action = strategyAlarmSignal.getAction();
 
-        if (signalClass == ALARM_SIGNAL.class) {
+            logger.logTgBot(I18nSupport.i18n_literals("strategy.alarm",
+                    strategyAlarmSignal.getTicker(),
+                    strategyAlarmSignal.getExchange(),
+                    indicator.alias(),
+                    Utils.intToInterval(strategyAlarmSignal.getInterval()),
+                    action.alias(),
+                    strategyAlarmSignal.getClose()));
+        } else {
             ALARM_SIGNAL alarmSignal = new ALARM_SIGNAL(inputSignal);
 
-            ALARM_SIGNAL.Indicator indicator = alarmSignal.getIndicator();
             ALARM_SIGNAL.Option option = alarmSignal.getOption();
+            Pair<Indicator, String> indicatorTickerPair = Pair.of(indicator, alarmSignal.getTicker());
 
             if (option.equals(ALARM_SIGNAL.Option.ONCE_PER_MINUTE)) {
-                dailyOncePerMinuteCount.putIfAbsent(indicator, 0);
+                dailyOncePerMinuteCount.putIfAbsent(indicatorTickerPair, 0);
+                dailyOncePerMinuteCount.put(indicatorTickerPair,
+                        dailyOncePerMinuteCount.get(indicatorTickerPair) + 1);
+
                 logger.logTgBot(I18nSupport.i18n_literals("alarm.once.per.minute",
-                        strategyProps.getTicker(),
-                        alarmSignal.getExchange(),
-                        indicator.ordinal(),
-                        indicator.alias(),
-                        Utils.intToInterval(alarmSignal.getInterval())));
-                dailyOncePerMinuteCount.put(indicator, dailyOncePerMinuteCount.get(indicator) + 1);
-            } else if (option.equals(ALARM_SIGNAL.Option.ONCE_PER_BAR_CLOSE)){
-                logger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.bar.close",
-                        strategyProps.getTicker(),
+                        alarmSignal.getTicker(),
                         alarmSignal.getExchange(),
                         indicator.ordinal(),
                         indicator.alias(),
                         Utils.intToInterval(alarmSignal.getInterval())));
             } else {
-                throw new IllegalArgumentException();
+                logger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.bar.close",
+                        alarmSignal.getTicker(),
+                        alarmSignal.getExchange(),
+                        indicator.ordinal(),
+                        indicator.alias(),
+                        Utils.intToInterval(alarmSignal.getInterval())));
             }
-        } else if (signalClass == STRATEGY_ALARM.class){
-            STRATEGY_ALARM strategyAlarmSignal = new STRATEGY_ALARM(inputSignal);
-
-            STRATEGY_ALARM.Indicator indicator = strategyAlarmSignal.getIndicator();
-            STRATEGY_ALARM.Action action = strategyAlarmSignal.getAction();
-
-            logger.logTgBot(I18nSupport.i18n_literals("strategy.alarm",
-                    strategyProps.getTicker(),
-                    strategyAlarmSignal.getExchange(),
-                    indicator.alias(),
-                    action.alias(),
-                    strategyAlarmSignal.getClose()));
-        } else {
-            throw new JSONException(I18nSupport.i18n_literals("unsupported.signal.exception"));
         }
     }
 
@@ -117,7 +112,13 @@ public class AlarmHandler extends StrategyHandler {
         }
     }
 
-    public static String getOncePerMinuteCountLogFileName(ALARM_SIGNAL.Indicator indicator) {
+    @Override
+    public boolean isSupportedSignal(Class<?> signal, String ticker) {
+        return !(strategyProps.getTickers().size() > 0 && !strategyProps.getTickers().contains(ticker))
+                && (signal.equals(ALARM_SIGNAL.class) || signal.equals(STRATEGY_ALARM_SIGNAL.class));
+    }
+
+    public static String getOncePerMinuteCountLogFileName(Indicator indicator) {
         return Strategy.ALARM + "_" + ALARM_SIGNAL.Option.ONCE_PER_MINUTE + "_" + indicator + ".txt";
     }
 }

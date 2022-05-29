@@ -7,21 +7,7 @@ import org.json.JSONObject;
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class STRATEGY_ALARM extends Signal {
-    public enum Indicator {
-        PIFAGOR_ALTS_3_5("PIFAGOR ALTS 3.5");
-
-        private final String alias;
-
-        Indicator(String alias) {
-            this.alias = alias;
-        }
-
-        public String alias() {
-            return alias;
-        }
-    }
-
+public class STRATEGY_ALARM_SIGNAL extends Signal {
     public enum Action {
         BUY("ПОКУПКА"),
         SELL("ПРОДАЖА");
@@ -40,21 +26,21 @@ public class STRATEGY_ALARM extends Signal {
     private final Indicator indicator;
     private final Action action;
 
-    public STRATEGY_ALARM(String ticker, String exchange, BigDecimal close, Integer interval, String instant, Indicator indicator, Action action) {
+    public STRATEGY_ALARM_SIGNAL(String ticker, String exchange, BigDecimal close, Integer interval, String instant, Indicator indicator, Action action) {
         super(ticker, exchange, close, interval, instant);
         this.indicator = indicator;
         this.action = action;
     }
 
-    public STRATEGY_ALARM(String ticker, String exchange, BigDecimal close, Integer interval, Date time, Indicator indicator, Action action) {
+    public STRATEGY_ALARM_SIGNAL(String ticker, String exchange, BigDecimal close, Integer interval, Date time, Indicator indicator, Action action) {
         super(ticker, exchange, close, interval, time);
         this.indicator = indicator;
         this.action = action;
     }
 
-    public STRATEGY_ALARM(JSONObject jsonObject) throws JSONException, IllegalArgumentException {
+    public STRATEGY_ALARM_SIGNAL(JSONObject jsonObject) throws JSONException, IllegalArgumentException {
         super(jsonObject);
-        indicator = STRATEGY_ALARM.Indicator.valueOf(jsonObject.getJSONObject(I18nSupport.i18n_literals("indicator"))
+        indicator = Indicator.valueOf(jsonObject.getJSONObject(I18nSupport.i18n_literals("indicator"))
                 .getString(I18nSupport.i18n_literals("type")).toUpperCase());
         action = Action.valueOf(jsonObject.getJSONObject(I18nSupport.i18n_literals("indicator"))
                 .getString(I18nSupport.i18n_literals("action")).toUpperCase());

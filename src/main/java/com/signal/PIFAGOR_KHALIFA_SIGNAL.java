@@ -8,8 +8,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 public final class PIFAGOR_KHALIFA_SIGNAL extends Signal {
-    public static final String TYPE = I18nSupport.i18n_literals("pifagor.khalifa");
-
     private final int floor;
 
     public PIFAGOR_KHALIFA_SIGNAL(String ticker, String exchange, BigDecimal close, Integer interval, String instant, int floor) {

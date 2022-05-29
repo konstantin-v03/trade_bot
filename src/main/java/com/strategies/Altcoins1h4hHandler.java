@@ -8,8 +8,9 @@ import com.binance.client.model.trade.Order;
 import com.binance.client.model.trade.Position;
 import com.futures.Amount;
 import com.futures.dualside.RequestSender;
+import com.signal.ALARM_SIGNAL;
+import com.signal.Indicator;
 import com.signal.PIFAGOR_ALTCOINS_SIGNAL;
-import com.signal.Signal;
 import com.tgbot.AsyncSender;
 import com.utils.Constants;
 import com.utils.I18nSupport;
@@ -19,41 +20,44 @@ import org.json.JSONObject;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 
-import static com.utils.Constants.INTERVAL_1h;
-import static com.utils.Constants.INTERVAL_4h;
+import static com.utils.Constants.*;
 
 @Deprecated
 public class Altcoins1h4hHandler extends StrategyHandler {
     private PIFAGOR_ALTCOINS_SIGNAL pifagorAltcoinsSignal1h;
     private PIFAGOR_ALTCOINS_SIGNAL pifagorAltcoinsSignal4h;
 
+    private final String ticker;
     private final Amount amount;
     private final int leverage;
 
     public Altcoins1h4hHandler(RequestSender requestSender, StrategyProps strategyProps, AsyncSender asyncSender) throws IllegalArgumentException{
         super(requestSender, strategyProps, asyncSender);
 
-        Properties properties = strategyProps.getProperties();
         String action1hStr, action4hStr;
 
-        amount = new Amount(strategyProps.getProperties().getProperty(Constants.AMOUNT_STR));
-        leverage = Integer.parseInt(strategyProps.getProperties().getProperty(Constants.LEVERAGE_STR));
+        if (strategyProps.getTickers().size() != 1) {
+            throw new IllegalArgumentException(I18nSupport.i18n_literals("tickers.size.must.be.one"));
+        }
 
-        if (properties != null && (action1hStr = properties.getProperty(Constants.INTERVAL_1H_STR)) != null &&
-                (action4hStr = properties.getProperty(Constants.INTERVAL_4H_STR)) != null) {
+        ticker = strategyProps.getTickers().get(0);
+        amount = new Amount(strategyProps.getProperties().get(Constants.AMOUNT_STR));
+        leverage = Integer.parseInt(strategyProps.getProperties().get(Constants.LEVERAGE_STR));
+
+        if ((action1hStr = strategyProps.getProperties().get(Constants.INTERVAL_1H_STR)) != null &&
+                (action4hStr = strategyProps.getProperties().get(Constants.INTERVAL_4H_STR)) != null) {
             PIFAGOR_ALTCOINS_SIGNAL.Action action1h = PIFAGOR_ALTCOINS_SIGNAL.Action.valueOf(action1hStr);
             PIFAGOR_ALTCOINS_SIGNAL.Action action4h = PIFAGOR_ALTCOINS_SIGNAL.Action.valueOf(action4hStr);
 
-            pifagorAltcoinsSignal1h = new PIFAGOR_ALTCOINS_SIGNAL(strategyProps.getTicker(),
+            pifagorAltcoinsSignal1h = new PIFAGOR_ALTCOINS_SIGNAL(ticker,
                     null,
                     null,
                     null,
                     new Date(),
                     action1h);
 
-            pifagorAltcoinsSignal4h = new PIFAGOR_ALTCOINS_SIGNAL(strategyProps.getTicker(),
+            pifagorAltcoinsSignal4h = new PIFAGOR_ALTCOINS_SIGNAL(ticker,
                     null,
                     null,
                     null,
@@ -63,12 +67,10 @@ public class Altcoins1h4hHandler extends StrategyHandler {
     }
 
     @Override
-    public synchronized void process(JSONObject inputSignal) throws JSONException, IllegalArgumentException {
-        Class<?> signalClass = Signal.getSignalClass(inputSignal);
-
+    public synchronized void process(Indicator indicator, JSONObject inputSignal) throws JSONException, IllegalArgumentException {
         PIFAGOR_ALTCOINS_SIGNAL pifagorAltcoinsSignal;
 
-        if (signalClass == PIFAGOR_ALTCOINS_SIGNAL.class) {
+        if (indicator.equals(Indicator.PIFAGOR_ALTCOINS)) {
             pifagorAltcoinsSignal = new PIFAGOR_ALTCOINS_SIGNAL(inputSignal);
 
             if (pifagorAltcoinsSignal.getInterval() == INTERVAL_4h) {
@@ -86,7 +88,7 @@ public class Altcoins1h4hHandler extends StrategyHandler {
                     pifagorAltcoinsSignal.getInterval() == INTERVAL_1h ? Constants.INTERVAL_1H_STR : Constants.INTERVAL_4H_STR,
                     pifagorAltcoinsSignal.getClose()));
 
-            if (strategyProps.isDebugMode()) {
+            if (Boolean.parseBoolean(strategyProps.getProperties().get(DEBUG_MODE_STR))) {
                 logger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.debug",
                         pifagorAltcoinsSignal.getTicker(),
                         pifagorAltcoinsSignal1h == null ? 0 : pifagorAltcoinsSignal1h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ? 1 : 2,
@@ -96,8 +98,8 @@ public class Altcoins1h4hHandler extends StrategyHandler {
             throw new JSONException(I18nSupport.i18n_literals("unsupported.signal.exception"));
         }
 
-        Position longPosition = requestSender.getPosition(strategyProps.getTicker(), PositionSide.LONG);
-        Position shortPosition = requestSender.getPosition(strategyProps.getTicker(), PositionSide.SHORT);
+        Position longPosition = requestSender.getPosition(ticker, PositionSide.LONG);
+        Position shortPosition = requestSender.getPosition(ticker, PositionSide.SHORT);
 
         Order closePositionOrder = null;
 
@@ -106,13 +108,13 @@ public class Altcoins1h4hHandler extends StrategyHandler {
             PositionSide positionSide = PIFAGOR_ALTCOINS_SIGNAL.Action.SELL.equals(pifagorAltcoinsSignal.getAction()) ?
                     PositionSide.LONG : PositionSide.SHORT;
 
-            if (strategyProps.isDebugMode()) {
+            if (Boolean.parseBoolean(strategyProps.getProperties().get(DEBUG_MODE_STR))) {
                 logger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.try.close.debug",
-                        strategyProps.getTicker(),
+                        ticker,
                         positionSide));
             }
 
-            closePositionOrder = requestSender.closePositionMarket(strategyProps.getTicker(), positionSide);
+            closePositionOrder = requestSender.closePositionMarket(ticker, positionSide);
         }
 
         boolean isOpen = false;
@@ -125,14 +127,14 @@ public class Altcoins1h4hHandler extends StrategyHandler {
             } else if (pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.SELL) && shortPosition != null) {
                 logger.logTgBot(I18nSupport.i18n_literals("position.already.opened", PositionSide.SHORT, shortPosition.getEntryPrice()));
             } else {
-                if (strategyProps.isDebugMode()) {
+                if (Boolean.parseBoolean(strategyProps.getProperties().get(DEBUG_MODE_STR))) {
                     logger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.try.open.debug",
-                            strategyProps.getTicker(),
+                            ticker,
                             pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
                                     PositionSide.LONG : PositionSide.SHORT));
                 }
 
-                requestSender.openPositionMarket(strategyProps.getTicker(),
+                requestSender.openPositionMarket(ticker,
                         pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
                                 OrderSide.BUY : OrderSide.SELL,
                         MarginType.ISOLATED,
@@ -147,17 +149,22 @@ public class Altcoins1h4hHandler extends StrategyHandler {
 
         if (isOpen) {
             Utils.sleep(1000);
-            logger.logOpenPosition(requestSender.getPosition(strategyProps.getTicker(),
+            logger.logOpenPosition(requestSender.getPosition(ticker,
                     pifagorAltcoinsSignal1h.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
                             PositionSide.LONG : PositionSide.SHORT));
         }
 
         if (closePositionOrder != null) {
             Utils.sleep(1000);
-            List<MyTrade> myTrades = requestSender.getMyTrades(strategyProps.getTicker(), closePositionOrder.getOrderId());
+            List<MyTrade> myTrades = requestSender.getMyTrades(ticker, closePositionOrder.getOrderId());
             logger.logClosePosition(myTrades);
             logger.logCloseLogToFile(Strategy.ALTCOINS_1h_4h, myTrades);
         }
+    }
+
+    @Override
+    public boolean isSupportedSignal(Class<?> signal, String ticker) {
+        return this.ticker.equals(ticker) && signal.equals(ALARM_SIGNAL.class);
     }
 
     @Override
