@@ -49,6 +49,7 @@ public class TelegramTradeBot extends AbilityBot {
         this.requestSender = requestSender;
         this.enabledStrategies = enabledStrategies;
         this.tradeBot = tradeBot;
+
         asyncSender = new AsyncSender(this);
 
         List<StrategyProps> strategyPropsList = db.getList(STRATEGY_DB);
@@ -293,7 +294,7 @@ public class TelegramTradeBot extends AbilityBot {
         } else if (strategyProps.getStrategy().equals(Strategy.ALTCOINS)) {
             enabledStrategies.add(new AltcoinsHandler(requestSender, strategyProps, asyncSender));
         } else if (strategyProps.getStrategy().equals(Strategy.ALARM)) {
-            enabledStrategies.add(new AlarmHandler(requestSender, strategyProps, asyncSender));
+            enabledStrategies.add(new AlarmHandler(requestSender, strategyProps, asyncSender, creatorId));
         } else if (strategyProps.getStrategy().equals(Strategy.CHIA_BALANCE_ALARM)) {
             enabledStrategies.add(new ChiaAlarmHandler(requestSender, strategyProps, asyncSender));
         } else {

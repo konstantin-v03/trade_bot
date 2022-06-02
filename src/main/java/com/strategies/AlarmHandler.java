@@ -24,8 +24,8 @@ public class AlarmHandler extends StrategyHandler {
     private final Scheduler scheduler;
     private Map<Pair<Indicator, String>, Integer> dailyOncePerMinuteCount;
 
-    public AlarmHandler(RequestSender requestSender, StrategyProps strategyProps, AsyncSender asyncSender) {
-        super(requestSender, strategyProps, asyncSender);
+    public AlarmHandler(RequestSender requestSender, StrategyProps strategyProps, AsyncSender asyncSender, long exceptionChatId) {
+        super(requestSender, strategyProps, asyncSender, exceptionChatId);
 
         dailyOncePerMinuteCount = new ConcurrentHashMap<>();
         String schedulerProperty = strategyProps.getProperties().get(Constants.SCHEDULER_STR);
