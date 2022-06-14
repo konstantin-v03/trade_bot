@@ -15,6 +15,7 @@ public class Constants {
     public static final String LOG_CHAT_IDS_STR = "logChatIds";
     public static final String SCHEDULER_STR = "scheduler";
     public static final String DEBUG_MODE_STR = "debugMode";
+    public static final String IS_LOG_ONCE_PER_MINUTE = "isLogOncePerMinute";
 
     public static final String NULL = "null";
 }

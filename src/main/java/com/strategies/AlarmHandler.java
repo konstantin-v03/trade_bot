@@ -9,6 +9,7 @@ import com.utils.Constants;
 import com.utils.I18nSupport;
 import com.utils.Scheduler;
 import com.utils.Utils;
+import org.checkerframework.checker.units.qual.C;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.telegram.abilitybots.api.util.Pair;
@@ -23,14 +24,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AlarmHandler extends StrategyHandler {
     private final Scheduler scheduler;
     private Map<Pair<Indicator, String>, Integer> dailyOncePerMinuteCount;
+    private final boolean isLogOncePerMinute;
 
     public AlarmHandler(RequestSender requestSender, StrategyProps strategyProps, AsyncSender asyncSender, long exceptionChatId) {
         super(requestSender, strategyProps, asyncSender, exceptionChatId);
 
         dailyOncePerMinuteCount = new ConcurrentHashMap<>();
-        String schedulerProperty = strategyProps.getProperties().get(Constants.SCHEDULER_STR);
+        isLogOncePerMinute = Boolean.parseBoolean(strategyProps.getProperties().get(Constants.IS_LOG_ONCE_PER_MINUTE));
 
-        if (Boolean.parseBoolean(schedulerProperty)) {
+        if (Boolean.parseBoolean(strategyProps.getProperties().get(Constants.SCHEDULER_STR))) {
             scheduler = Scheduler.scheduleEveryDayAtFixedTime(() -> {
                 Map<Pair<Indicator, String>, Integer> dailyOncePerMinuteCountTemp = dailyOncePerMinuteCount;
                 dailyOncePerMinuteCount = new ConcurrentHashMap<>();
@@ -88,12 +90,14 @@ public class AlarmHandler extends StrategyHandler {
                 dailyOncePerMinuteCount.put(indicatorTickerPair,
                         dailyOncePerMinuteCount.get(indicatorTickerPair) + 1);
 
-                logger.logTgBot(I18nSupport.i18n_literals("alarm.once.per.minute",
-                        alarmSignal.getTicker(),
-                        alarmSignal.getExchange(),
-                        indicator.ordinal(),
-                        indicator.alias(),
-                        Utils.intToInterval(alarmSignal.getInterval())));
+                if (isLogOncePerMinute) {
+                    logger.logTgBot(I18nSupport.i18n_literals("alarm.once.per.minute",
+                            alarmSignal.getTicker(),
+                            alarmSignal.getExchange(),
+                            indicator.ordinal(),
+                            indicator.alias(),
+                            Utils.intToInterval(alarmSignal.getInterval())));
+                }
             } else {
                 logger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.bar.close",
                         alarmSignal.getTicker(),
