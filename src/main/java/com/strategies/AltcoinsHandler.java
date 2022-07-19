@@ -9,6 +9,7 @@ import com.binance.client.model.trade.Position;
 import com.futures.Amount;
 import com.futures.dualside.RequestSender;
 import com.signal.ALARM_SIGNAL;
+import com.signal.Action;
 import com.signal.Indicator;
 import com.signal.PIFAGOR_ALTCOINS_SIGNAL;
 import com.tgbot.AsyncSender;
@@ -32,8 +33,8 @@ public class AltcoinsHandler extends StrategyHandler {
         }
 
         ticker = strategyProps.getTickers().get(0);
-        amount = new Amount(strategyProps.getProperties().get(Constants.AMOUNT_STR));
-        leverage = Integer.parseInt(strategyProps.getProperties().get(Constants.LEVERAGE_STR));
+        amount = new Amount(strategyProps.getProperties().get(Constants.AMOUNT.getKey()));
+        leverage = Integer.parseInt(strategyProps.getProperties().get(Constants.LEVERAGE.getKey()));
     }
 
     @Override
@@ -45,7 +46,7 @@ public class AltcoinsHandler extends StrategyHandler {
 
             logger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.signal",
                     pifagorAltcoinsSignal.getTicker(),
-                    pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ? 0 : 1,
+                    pifagorAltcoinsSignal.getAction().equals(Action.BUY) ? 0 : 1,
                     pifagorAltcoinsSignal.getAction(),
                     pifagorAltcoinsSignal.getClose()));
         } else {
@@ -53,14 +54,14 @@ public class AltcoinsHandler extends StrategyHandler {
         }
 
         Order closePositionOrder = requestSender.closePositionMarket(ticker,
-                pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
-                        PositionSide.SHORT : PositionSide.LONG);
+                pifagorAltcoinsSignal.getAction().equals(Action.BUY) ?
+                        PositionSide.SHORT : PositionSide.LONG, 100);
 
         requestSender.openPositionMarket(ticker,
-                pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
+                pifagorAltcoinsSignal.getAction().equals(Action.BUY) ?
                         OrderSide.BUY : OrderSide.SELL,
                 MarginType.ISOLATED,
-                pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
+                pifagorAltcoinsSignal.getAction().equals(Action.BUY) ?
                         PositionSide.LONG : PositionSide.SHORT,
                 amount,
                 leverage);
@@ -68,14 +69,14 @@ public class AltcoinsHandler extends StrategyHandler {
         List<MyTrade> myTrades = closePositionOrder != null ? requestSender.getMyTrades(ticker,
                 closePositionOrder.getOrderId()) : null;
 
-        logger.logClosePosition(myTrades);
+        logger.logClosedPosition(myTrades);
         logger.logCloseLogToFile(Strategy.ALTCOINS, myTrades);
 
         Position position = requestSender.getPosition(ticker,
-                pifagorAltcoinsSignal.getAction().equals(PIFAGOR_ALTCOINS_SIGNAL.Action.BUY) ?
+                pifagorAltcoinsSignal.getAction().equals(Action.BUY) ?
                         PositionSide.LONG : PositionSide.SHORT);
 
-        logger.logOpenPosition(position);
+        logger.logOpenedPosition(position);
     }
 
     @Override

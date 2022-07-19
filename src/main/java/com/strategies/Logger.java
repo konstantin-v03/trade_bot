@@ -41,7 +41,7 @@ public class Logger {
         }
     }
 
-    public void logOpenPosition(Position position) {
+    public void logOpenedPosition(Position position) {
         logTgBot(position != null ? I18nSupport.i18n_literals("position.open",
                 position.getPositionSide().equals("LONG") ? "\uD83D\uDCC8" : "\uD83D\uDCC9",
                 position.getSymbol(),
@@ -50,7 +50,7 @@ public class Logger {
                 new Date()) : I18nSupport.i18n_literals("position.not.open", "Position = null!"));
     }
 
-    public void logClosePosition(List<MyTrade> myTrades) {
+    public void logClosedPosition(List<MyTrade> myTrades) {
         MyTrade myTrade;
 
         logTgBot(myTrades != null && (myTrade = myTrades.get(0)) != null ?

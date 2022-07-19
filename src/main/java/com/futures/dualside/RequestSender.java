@@ -9,6 +9,8 @@ import com.binance.client.model.trade.*;
 import com.futures.Amount;
 import com.futures.Filter;
 import com.futures.TP_SL;
+import com.utils.Calculations;
+import com.utils.I18nSupport;
 import org.jetbrains.annotations.NonNls;
 
 import java.math.BigDecimal;
@@ -88,16 +90,43 @@ public class RequestSender {
         return tp_sl;
     }
 
-    public synchronized Order closePositionMarket(String symbol, PositionSide positionSide) {
+    public synchronized Order closePositionMarket(String symbol, PositionSide positionSide, int percentage) throws NullPointerException, IllegalArgumentException{
+        ExchangeInfoEntry exchangeInfoEntry = getExchangeInfo(symbol);
+        String quantityStr;
+
+        if (percentage == 100) {
+            quantityStr = Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+                    Filter.Type.MARKET_LOT_SIZE,
+                    Filter.Key.MAX_QTY.toString()));
+        } else {
+            BigDecimal stepSize = new BigDecimal(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+                    Filter.Type.MARKET_LOT_SIZE,
+                    Filter.Key.STEP_SIZE.toString()));
+
+            BigDecimal quantity = Calculations.percentage(getPosition(symbol, positionSide).getPositionAmt(), new BigDecimal(percentage));
+
+            quantity = quantity.divide(stepSize, 0, RoundingMode.FLOOR).multiply(stepSize);
+
+            BigDecimal minQuantity = new BigDecimal(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+                    Filter.Type.MARKET_LOT_SIZE,
+                    Filter.Key.MIN_QTY.toString()));
+
+            if (quantity.compareTo(minQuantity) < 0) {
+               throw new IllegalArgumentException(I18nSupport.i18n_literals("order.quantity.too.small",
+                       quantity.setScale(stepSize.scale(), RoundingMode.FLOOR).toString(),
+                       minQuantity.setScale(stepSize.scale(), RoundingMode.FLOOR).toString()));
+            }
+
+            quantityStr = quantity.toString();
+        }
+
         return syncRequestClient.postOrder(
                 symbol,
                 positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY,
                 positionSide,
                 OrderType.MARKET,
                 null,
-                Objects.requireNonNull(getExchangeInfoFilterValue(getExchangeInfo(symbol).getFilters(),
-                        Filter.Type.MARKET_LOT_SIZE,
-                        Filter.Key.MAX_QTY.toString())),
+                quantityStr,
                 null,
                 null,
                 null,
@@ -121,7 +150,8 @@ public class RequestSender {
             amountUSD = amount.getAmount();
         }
 
-        BigDecimal quantity = Objects.requireNonNull(amountUSD).multiply(new BigDecimal(leverage)).divide(getLastPrice(symbol), new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(Objects.requireNonNull(exchangeInfoEntry).getFilters(),
+        BigDecimal quantity = Objects.requireNonNull(amountUSD).multiply(new BigDecimal(leverage)).divide(getLastPrice(symbol),
+                new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(Objects.requireNonNull(exchangeInfoEntry).getFilters(),
                 Filter.Type.MARKET_LOT_SIZE,
                 Filter.Key.STEP_SIZE.toString()))).scale(), RoundingMode.FLOOR);
 
@@ -198,16 +228,6 @@ public class RequestSender {
         return accountBalances.size() == 1 ? accountBalances.get(0).getMaxWithdrawAmount() : null;
     }
 
-    public String getAssetBySymbol(String symbol) {
-        if (symbol.matches(".*BUSD")) {
-            return "BUSD";
-        } else if (symbol.matches(".*USDT")) {
-            return "USDT";
-        } else {
-            return null;
-        }
-    }
-
     public ResponseResult cancelOrders(String symbol) {
         return syncRequestClient.cancelAllOpenOrder(symbol);
     }
@@ -259,5 +279,15 @@ public class RequestSender {
         }
 
         return null;
+    }
+
+    public static String getAssetBySymbol(String symbol) {
+        if (symbol.matches(".*BUSD")) {
+            return "BUSD";
+        } else if (symbol.matches(".*USDT")) {
+            return "USDT";
+        } else {
+            return null;
+        }
     }
 }

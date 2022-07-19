@@ -28,9 +28,9 @@ public class Scheduler {
         return new Scheduler(scheduledExecutorService);
     }
 
-    public static Scheduler scheduleEveryMinute(Runnable command) {
+    public static Scheduler scheduleEveryMinute(Runnable command, int minute) {
         ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-        scheduledExecutorService.scheduleAtFixedRate(command , 0, 1, TimeUnit.MINUTES);
+        scheduledExecutorService.scheduleAtFixedRate(command , 0, minute, TimeUnit.MINUTES);
 
         return new Scheduler(scheduledExecutorService);
     }

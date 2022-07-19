@@ -1,10 +1,10 @@
 package com.strategies;
 
+import com.utils.Constants;
+
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.utils.Constants.LOG_CHAT_IDS_STR;
 
 public class StrategyProps implements Serializable {
     private static final long serialVersionUID = 835489771410264765L;
@@ -37,7 +37,7 @@ public class StrategyProps implements Serializable {
         this.properties = Collections.unmodifiableMap(properties);
 
         logChatIds = Arrays
-                .stream(Optional.ofNullable(properties.get(LOG_CHAT_IDS_STR))
+                .stream(Optional.ofNullable(properties.get(Constants.LOG_CHAT_IDS.getKey()))
                         .orElse(String.valueOf(chatId))
                         .split(","))
                 .map(Long::valueOf)

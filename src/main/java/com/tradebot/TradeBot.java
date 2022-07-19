@@ -56,8 +56,6 @@ public class TradeBot implements HttpHandler {
             Indicator indicator = Indicator.from(inputRequest);
             Set<Class<?>> signals = indicator.getSignals();
 
-            //telegramTradeBot.asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("signal.received", inputRequest.toString()), telegramTradeBot.creatorId());
-
             for (StrategyHandler strategyHandler : enabledStrategies) {
                 for (Class<?> signal : signals) {
                     if (strategyHandler.isSupportedSignal(signal, ticker)) {

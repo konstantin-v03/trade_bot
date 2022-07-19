@@ -132,7 +132,28 @@ public class TelegramTradeBot extends AbilityBot {
                 .input(0)
                 .action(ctx -> asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("supported.strategies",
                         Arrays.stream(Strategy.values())
-                                .map(str -> I18nSupport.i18n_literals("supported.strategy", str))
+                                .map(strategy -> I18nSupport.i18n_literals("supported.strategy",
+                                        strategy,
+                                        strategy.getRequiredArguments() != null ?
+                                                "\n" +
+                                                strategy
+                                                        .getRequiredArguments()
+                                                        .stream()
+                                                        .map(propertySE ->
+                                                                I18nSupport.i18n_literals("required.argument",
+                                                                        propertySE.getKey(),
+                                                                        propertySE.getValueType().getSimpleName().toUpperCase()))
+                                                        .collect(Collectors.joining("\n")) : "",
+                                        strategy.getAdditionalProperties() != null ?
+                                                "\n" +
+                                                strategy
+                                                        .getAdditionalProperties()
+                                                        .stream()
+                                                        .map(propertySE ->
+                                                                I18nSupport.i18n_literals("additional.argument",
+                                                                        propertySE.getKey(),
+                                                                        propertySE.getValueType().getSimpleName().toUpperCase()))
+                                                        .collect(Collectors.joining("\n")) : ""))
                                 .collect(Collectors.joining("\n"))), ctx.chatId()))
                 .build();
     }
@@ -297,6 +318,8 @@ public class TelegramTradeBot extends AbilityBot {
             enabledStrategies.add(new AlarmHandler(requestSender, strategyProps, asyncSender, creatorId));
         } else if (strategyProps.getStrategy().equals(Strategy.CHIA_BALANCE_ALARM)) {
             enabledStrategies.add(new ChiaAlarmHandler(requestSender, strategyProps, asyncSender));
+        } else if (strategyProps.getStrategy().equals(Strategy.SAFETY)) {
+            enabledStrategies.add(new SafetyHandler(requestSender, strategyProps, asyncSender, creatorId));
         } else {
             throw new IllegalArgumentException("Strategy is not supported!");
         }

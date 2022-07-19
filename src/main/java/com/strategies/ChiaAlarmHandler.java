@@ -3,6 +3,7 @@ package com.strategies;
 import com.futures.dualside.RequestSender;
 import com.signal.Indicator;
 import com.tgbot.AsyncSender;
+import com.utils.Constants;
 import com.utils.I18nSupport;
 import com.utils.Scheduler;
 import okhttp3.OkHttpClient;
@@ -21,17 +22,16 @@ import java.util.stream.Collectors;
 
 public class ChiaAlarmHandler extends StrategyHandler {
     private final Scheduler scheduler;
-
-    private final String alias;
     private final String address;
+    private final String alias;
 
     private final OkHttpClient client;
     private BigDecimal lastXch;
 
     public ChiaAlarmHandler(RequestSender requestSender, StrategyProps strategyProps, AsyncSender asyncSender) throws IllegalArgumentException, NullPointerException {
         super(requestSender, strategyProps, asyncSender);
-        address = strategyProps.getProperties().get("address");
-        alias = strategyProps.getProperties().get("alias");
+        address = strategyProps.getProperties().get(Constants.ADDRESS.getKey());
+        alias = strategyProps.getProperties().get(Constants.ALIAS.getKey());
         client = new OkHttpClient();
 
         scheduler = Scheduler.scheduleEveryMinute(() -> {
@@ -69,7 +69,7 @@ public class ChiaAlarmHandler extends StrategyHandler {
             }
 
             lastXch = xch;
-        });
+        }, 5);
     }
 
     @Override

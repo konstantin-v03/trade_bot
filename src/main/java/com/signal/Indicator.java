@@ -44,7 +44,13 @@ public enum Indicator {
     PIFAGOR_ALTCOINS(
             Stream.of(PIFAGOR_ALTCOINS_SIGNAL.class).collect(Collectors.toSet())),
     PIFAGOR_MFI(
-            Stream.of(PIFAGOR_MFI_SIGNAL.class).collect(Collectors.toSet()));
+            Stream.of(PIFAGOR_MFI_SIGNAL.class).collect(Collectors.toSet())),
+    PIFAGOR_SEVEN_DAYS(
+            Stream.of(PIFAGOR_SEVEN_DAYS_SIGNAL.class).collect(Collectors.toSet())),
+    PIFAGOR_GLOBAL(
+            Stream.of(PIFAGOR_GLOBAL_SIGNAL.class).collect(Collectors.toSet())),
+    FMA(
+            Stream.of(FMA_SIGNAL.class).collect(Collectors.toSet()));
 
     private final Set<Class<?>> signals;
     private final String alias;

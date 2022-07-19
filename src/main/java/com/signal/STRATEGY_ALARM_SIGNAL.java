@@ -8,21 +8,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 public class STRATEGY_ALARM_SIGNAL extends Signal {
-    public enum Action {
-        BUY("ПОКУПКА"),
-        SELL("ПРОДАЖА");
-
-        private final String alias;
-
-        Action(String alias) {
-            this.alias = alias;
-        }
-
-        public String alias() {
-            return alias;
-        }
-    }
-
     private final Indicator indicator;
     private final Action action;
 

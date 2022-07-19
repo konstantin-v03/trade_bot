@@ -2,6 +2,7 @@ package com.strategies;
 
 import com.futures.dualside.RequestSender;
 import com.signal.ALARM_SIGNAL;
+import com.signal.Action;
 import com.signal.Indicator;
 import com.signal.STRATEGY_ALARM_SIGNAL;
 import com.tgbot.AsyncSender;
@@ -9,7 +10,6 @@ import com.utils.Constants;
 import com.utils.I18nSupport;
 import com.utils.Scheduler;
 import com.utils.Utils;
-import org.checkerframework.checker.units.qual.C;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.telegram.abilitybots.api.util.Pair;
@@ -30,9 +30,9 @@ public class AlarmHandler extends StrategyHandler {
         super(requestSender, strategyProps, asyncSender, exceptionChatId);
 
         dailyOncePerMinuteCount = new ConcurrentHashMap<>();
-        isLogOncePerMinute = Boolean.parseBoolean(strategyProps.getProperties().get(Constants.IS_LOG_ONCE_PER_MINUTE));
+        isLogOncePerMinute = Boolean.parseBoolean(strategyProps.getProperties().get(Constants.IS_LOG_ONCE_PER_MINUTE.getKey()));
 
-        if (Boolean.parseBoolean(strategyProps.getProperties().get(Constants.SCHEDULER_STR))) {
+        if (Boolean.parseBoolean(strategyProps.getProperties().get(Constants.SCHEDULER.getKey()))) {
             scheduler = Scheduler.scheduleEveryDayAtFixedTime(() -> {
                 Map<Pair<Indicator, String>, Integer> dailyOncePerMinuteCountTemp = dailyOncePerMinuteCount;
                 dailyOncePerMinuteCount = new ConcurrentHashMap<>();
@@ -70,7 +70,7 @@ public class AlarmHandler extends StrategyHandler {
     public void process(Indicator indicator, JSONObject inputSignal) throws JSONException, IllegalArgumentException {
         if (indicator.isStrategy()) {
             STRATEGY_ALARM_SIGNAL strategyAlarmSignal = new STRATEGY_ALARM_SIGNAL(inputSignal);
-            STRATEGY_ALARM_SIGNAL.Action action = strategyAlarmSignal.getAction();
+            Action action = strategyAlarmSignal.getAction();
 
             logger.logTgBot(I18nSupport.i18n_literals("strategy.alarm",
                     strategyAlarmSignal.getTicker(),
