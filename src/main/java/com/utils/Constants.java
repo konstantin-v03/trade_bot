@@ -18,6 +18,7 @@ public class Constants {
     public static final PropertySE LOG_CHAT_IDS = new PropertySE("logChatIds", Integer[].class);
     public static final PropertySE SCHEDULER = new PropertySE("scheduler", Boolean.class);
     public static final PropertySE DEBUG_MODE = new PropertySE("debugMode", Boolean.class);
+    public static final PropertySE TEST_MODE = new PropertySE("testMode", Boolean.class);
     public static final PropertySE IS_LOG_ONCE_PER_MINUTE = new PropertySE("isLogOncePerMinute", Boolean.class);
 
     public static final PropertySE ADDRESS = new PropertySE("address", String.class);

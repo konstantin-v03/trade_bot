@@ -1,7 +1,6 @@
 package com.strategies;
 
 import com.binance.client.model.enums.MarginType;
-import com.binance.client.model.enums.OrderSide;
 import com.binance.client.model.enums.PositionSide;
 import com.binance.client.model.trade.MyTrade;
 import com.binance.client.model.trade.Order;
@@ -84,7 +83,7 @@ public class Altcoins1h4hHandler extends StrategyHandler {
 
             logger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.signal",
                     pifagorAltcoinsSignal.getTicker(),
-                    pifagorAltcoinsSignal.getAction().equals(Action.BUY) ? 0 : 1,
+                    pifagorAltcoinsSignal.getAction().getEmoji(),
                     pifagorAltcoinsSignal.getAction(),
                     pifagorAltcoinsSignal.getInterval() == INTERVAL_1h ? Constants.INTERVAL_1H_STR : Constants.INTERVAL_4H_STR,
                     pifagorAltcoinsSignal.getClose()));
@@ -92,8 +91,8 @@ public class Altcoins1h4hHandler extends StrategyHandler {
             if (Boolean.parseBoolean(strategyProps.getProperties().get(DEBUG_MODE.getKey()))) {
                 logger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.1h.4h.debug",
                         pifagorAltcoinsSignal.getTicker(),
-                        pifagorAltcoinsSignal1h == null ? 0 : pifagorAltcoinsSignal1h.getAction().equals(Action.BUY) ? 1 : 2,
-                        pifagorAltcoinsSignal4h == null ? 0 : pifagorAltcoinsSignal4h.getAction().equals(Action.BUY) ? 1 : 2));
+                        pifagorAltcoinsSignal1h == null ? "⚫" : pifagorAltcoinsSignal1h.getAction().getEmoji(),
+                        pifagorAltcoinsSignal4h == null ? "⚫" : pifagorAltcoinsSignal4h.getAction().getEmoji()));
             }
         } else {
             throw new JSONException(I18nSupport.i18n_literals("unsupported.signal.exception"));
@@ -137,10 +136,8 @@ public class Altcoins1h4hHandler extends StrategyHandler {
 
                 requestSender.openPositionMarket(ticker,
                         pifagorAltcoinsSignal.getAction().equals(Action.BUY) ?
-                                OrderSide.BUY : OrderSide.SELL,
-                        MarginType.ISOLATED,
-                        pifagorAltcoinsSignal.getAction().equals(Action.BUY) ?
                                 PositionSide.LONG : PositionSide.SHORT,
+                        MarginType.ISOLATED,
                         amount,
                         leverage);
 

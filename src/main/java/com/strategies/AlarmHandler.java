@@ -45,7 +45,7 @@ public class AlarmHandler extends StrategyHandler {
 
                         logger.logTgBot(I18nSupport.i18n_literals("alarm.once.per.minute.count",
                                 indicatorTickerPair.b(),
-                                indicatorTickerPair.a().ordinal(),
+                                indicatorTickerPair.a().getEmoji(),
                                 indicatorTickerPair.a().alias(),
                                 count));
 
@@ -94,7 +94,7 @@ public class AlarmHandler extends StrategyHandler {
                     logger.logTgBot(I18nSupport.i18n_literals("alarm.once.per.minute",
                             alarmSignal.getTicker(),
                             alarmSignal.getExchange(),
-                            indicator.ordinal(),
+                            indicator.getEmoji(),
                             indicator.alias(),
                             Utils.intToInterval(alarmSignal.getInterval())));
                 }
@@ -102,7 +102,7 @@ public class AlarmHandler extends StrategyHandler {
                 logger.log$pinTgBot(I18nSupport.i18n_literals("alarm.once.per.bar.close",
                         alarmSignal.getTicker(),
                         alarmSignal.getExchange(),
-                        indicator.ordinal(),
+                        indicator.getEmoji(),
                         indicator.alias(),
                         Utils.intToInterval(alarmSignal.getInterval())));
             }

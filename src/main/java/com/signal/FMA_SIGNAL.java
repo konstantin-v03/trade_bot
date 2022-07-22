@@ -9,7 +9,21 @@ import java.util.Date;
 
 public class FMA_SIGNAL extends Signal {
     public enum SMA_COLOR {
-        GREEN, YELLOW, BLACK, ORANGE, RED
+        GREEN("\uD83D\uDFE2"),
+        YELLOW("\uD83D\uDFE1"),
+        BLACK("⚫"),
+        ORANGE("\uD83D\uDFE0"),
+        RED("\uD83D\uDD34");
+
+        private final String emoji;
+
+        SMA_COLOR(String emoji) {
+            this.emoji = emoji;
+        }
+
+        public String getEmoji() {
+            return emoji;
+        }
     }
 
     private final SMA_COLOR smaColor;

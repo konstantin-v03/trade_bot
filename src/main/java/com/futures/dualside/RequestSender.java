@@ -6,11 +6,11 @@ import com.binance.client.model.enums.*;
 import com.binance.client.model.market.ExchangeInfoEntry;
 import com.binance.client.model.market.MarkPrice;
 import com.binance.client.model.trade.*;
+import com.exceptions.IllegalQuantityException;
 import com.futures.Amount;
 import com.futures.Filter;
 import com.futures.TP_SL;
 import com.utils.Calculations;
-import com.utils.I18nSupport;
 import org.jetbrains.annotations.NonNls;
 
 import java.math.BigDecimal;
@@ -31,12 +31,132 @@ public class RequestSender {
         }
     }
 
-    public Order openLongPositionMarket(String symbol, MarginType marginType, Amount amount, int leverage) throws NullPointerException {
-        return openPositionMarket(symbol, OrderSide.BUY, marginType, PositionSide.LONG, amount, leverage);
+    public synchronized Order openPositionPercentageOfMarginBalance(String symbol, PositionSide positionSide, MarginType marginType, int percentage, int leverage) throws NullPointerException, IllegalArgumentException {
+        Position position;
+
+        if (percentage >= 100 || (position = getPosition(symbol, positionSide)) == null) {
+            return openPositionMarket(symbol, positionSide, marginType, new Amount(new BigDecimal(percentage), Amount.Type.PERCENT), leverage);
+        }
+
+        BigDecimal initialMargin = position.getInitialMargin();
+
+        BigDecimal buyInAdditionMargin =
+                Calculations.percentage(getAvailableBalance(RequestSender.getAssetBySymbol(symbol)).add(initialMargin),
+                                new BigDecimal(percentage))
+                        .subtract(initialMargin);
+
+        if (buyInAdditionMargin.compareTo(BigDecimal.ZERO) > 0) {
+            return openPositionMarket(symbol,
+                    positionSide,
+                    MarginType.ISOLATED,
+                    new Amount(buyInAdditionMargin, Amount.Type.USD),
+                    leverage);
+        } else {
+            throw new IllegalQuantityException();
+        }
     }
 
-    public Order openShortPositionMarket(String symbol, MarginType marginType, Amount amount, int leverage) throws NullPointerException {
-        return openPositionMarket(symbol, OrderSide.SELL, marginType, PositionSide.SHORT, amount, leverage);
+    public synchronized Order openPositionMarket(String symbol, PositionSide positionSide, MarginType marginType, Amount amount, int leverage) throws NullPointerException, IllegalQuantityException {
+        OrderSide orderSide;
+
+        if (positionSide.equals(PositionSide.LONG)) {
+            orderSide = OrderSide.BUY;
+        } else if (positionSide.equals(PositionSide.SHORT)) {
+            orderSide = OrderSide.SELL;
+        } else {
+            throw new IllegalArgumentException();
+        }
+
+        ExchangeInfoEntry exchangeInfoEntry = getExchangeInfo(symbol);
+
+        BigDecimal amountUSD = null;
+
+        if (amount.getType().equals(Amount.Type.PERCENT)) {
+            amountUSD = Amount.getAmountUSD(amount.getAmount(), Objects.requireNonNull(getAvailableBalance(getAssetBySymbol(symbol))));
+        } else if (amount.getType().equals(Amount.Type.USD)){
+            amountUSD = amount.getAmount();
+        }
+
+        BigDecimal quantity = Objects.requireNonNull(amountUSD).multiply(new BigDecimal(leverage)).divide(getLastPrice(symbol),
+                new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(Objects.requireNonNull(exchangeInfoEntry).getFilters(),
+                        Filter.Type.MARKET_LOT_SIZE,
+                        Filter.Key.STEP_SIZE.toString()))).scale(), RoundingMode.FLOOR);
+
+        List<PositionRisk> positionRisks = syncRequestClient.getPositionRisk(symbol);
+        PositionRisk positionRisk = getPositionRisk(positionRisks, symbol, positionSide);
+
+        if (positionRisk != null) {
+            requireLegalQuantity(quantity, getLastPrice(symbol), exchangeInfoEntry);
+
+            if (positionRisk.getLeverage().compareTo(new BigDecimal(leverage)) != 0) {
+                syncRequestClient.changeInitialLeverage(symbol, leverage);
+            }
+
+            if ((positionRisk.getMarginType().equals("cross") && marginType.equals(MarginType.ISOLATED)) ||
+                    (positionRisk.getMarginType().equals("isolated") && marginType.equals(MarginType.CROSSED)))  {
+                syncRequestClient.changeMarginType(symbol, marginType);
+            }
+
+            return syncRequestClient.postOrder(symbol,
+                    orderSide,
+                    positionSide,
+                    OrderType.MARKET,
+                    null,
+                    quantity.toString(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    NewOrderRespType.ACK);
+        }
+
+        return null;
+    }
+
+    public synchronized Order closePositionMarket(String symbol, PositionSide positionSide, int percentage) throws NullPointerException, IllegalQuantityException{
+        ExchangeInfoEntry exchangeInfoEntry = getExchangeInfo(symbol);
+        String quantityStr;
+
+        if (percentage == 100) {
+            quantityStr = Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+                    Filter.Type.MARKET_LOT_SIZE,
+                    Filter.Key.MAX_QTY.toString()));
+        } else {
+            BigDecimal stepSize = new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+                    Filter.Type.MARKET_LOT_SIZE,
+                    Filter.Key.STEP_SIZE.toString())));
+
+            BigDecimal quantity = Calculations.percentage(getPosition(symbol, positionSide).getPositionAmt(), new BigDecimal(percentage));
+
+            quantity = quantity.divide(stepSize, 0, RoundingMode.FLOOR).multiply(stepSize);
+
+            requireLegalQuantity(quantity, getLastPrice(symbol), exchangeInfoEntry);
+
+            quantityStr = quantity.toString();
+        }
+
+        return syncRequestClient.postOrder(
+                symbol,
+                positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY,
+                positionSide,
+                OrderType.MARKET,
+                null,
+                quantityStr,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                NewOrderRespType.ACK);
     }
 
     public synchronized TP_SL postTP_SLOrders(String symbol, PositionSide positionSide, int takeProfitPercent, int stopLossPercent) {
@@ -88,114 +208,6 @@ public class RequestSender {
         }
 
         return tp_sl;
-    }
-
-    public synchronized Order closePositionMarket(String symbol, PositionSide positionSide, int percentage) throws NullPointerException, IllegalArgumentException{
-        ExchangeInfoEntry exchangeInfoEntry = getExchangeInfo(symbol);
-        String quantityStr;
-
-        if (percentage == 100) {
-            quantityStr = Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
-                    Filter.Type.MARKET_LOT_SIZE,
-                    Filter.Key.MAX_QTY.toString()));
-        } else {
-            BigDecimal stepSize = new BigDecimal(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
-                    Filter.Type.MARKET_LOT_SIZE,
-                    Filter.Key.STEP_SIZE.toString()));
-
-            BigDecimal quantity = Calculations.percentage(getPosition(symbol, positionSide).getPositionAmt(), new BigDecimal(percentage));
-
-            quantity = quantity.divide(stepSize, 0, RoundingMode.FLOOR).multiply(stepSize);
-
-            BigDecimal minQuantity = new BigDecimal(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
-                    Filter.Type.MARKET_LOT_SIZE,
-                    Filter.Key.MIN_QTY.toString()));
-
-            if (quantity.compareTo(minQuantity) < 0) {
-               throw new IllegalArgumentException(I18nSupport.i18n_literals("order.quantity.too.small",
-                       quantity.setScale(stepSize.scale(), RoundingMode.FLOOR).toString(),
-                       minQuantity.setScale(stepSize.scale(), RoundingMode.FLOOR).toString()));
-            }
-
-            quantityStr = quantity.toString();
-        }
-
-        return syncRequestClient.postOrder(
-                symbol,
-                positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY,
-                positionSide,
-                OrderType.MARKET,
-                null,
-                quantityStr,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                NewOrderRespType.ACK);
-    }
-
-    public synchronized Order openPositionMarket(String symbol, OrderSide orderSide, MarginType marginType, PositionSide positionSide, Amount amount, int leverage){
-        ExchangeInfoEntry exchangeInfoEntry = getExchangeInfo(symbol);
-
-        BigDecimal amountUSD = null;
-
-        if (amount.getType().equals(Amount.Type.PERCENT)) {
-            amountUSD = Amount.getAmountUSD(amount.getAmount(), Objects.requireNonNull(getAvailableBalance(getAssetBySymbol(symbol))));
-        } else if (amount.getType().equals(Amount.Type.USD)){
-            amountUSD = amount.getAmount();
-        }
-
-        BigDecimal quantity = Objects.requireNonNull(amountUSD).multiply(new BigDecimal(leverage)).divide(getLastPrice(symbol),
-                new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(Objects.requireNonNull(exchangeInfoEntry).getFilters(),
-                Filter.Type.MARKET_LOT_SIZE,
-                Filter.Key.STEP_SIZE.toString()))).scale(), RoundingMode.FLOOR);
-
-        List<PositionRisk> positionRisks = syncRequestClient.getPositionRisk(symbol);
-        PositionRisk positionRisk = getPositionRisk(positionRisks, symbol, positionSide);
-
-        if (positionRisk != null && quantity.compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
-                Filter.Type.MARKET_LOT_SIZE,
-                Filter.Key.MIN_QTY.toString())))) >= 0 &&
-                quantity.compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
-                        Filter.Type.MARKET_LOT_SIZE,
-                        Filter.Key.MAX_QTY.toString())))) <= 0 &&
-                quantity.multiply(getLastPrice(symbol)).compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
-                        Filter.Type.MIN_NOTIONAL,
-                        Filter.Key.NOTIONAL.toString())))) >= 0) {
-
-            if (positionRisk.getLeverage().compareTo(new BigDecimal(leverage)) != 0) {
-                syncRequestClient.changeInitialLeverage(symbol, leverage);
-            }
-
-            if ((positionRisk.getMarginType().equals("cross") && marginType.equals(MarginType.ISOLATED)) ||
-                    (positionRisk.getMarginType().equals("isolated") && marginType.equals(MarginType.CROSSED)))  {
-                syncRequestClient.changeMarginType(symbol, marginType);
-            }
-
-            return syncRequestClient.postOrder(symbol,
-                    orderSide,
-                    positionSide,
-                    OrderType.MARKET,
-                    null,
-                    quantity.toString(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    NewOrderRespType.ACK);
-        }
-
-        return null;
     }
 
     public List<MyTrade> getMyTrades(String symbol, Long orderId) {
@@ -263,7 +275,7 @@ public class RequestSender {
         return positionRisks.size() == 1 ? positionRisks.get(0) : null;
     }
 
-    public String getExchangeInfoFilterValue(List<List<Map<String, String>>> exchangeInfoEntryFilters,
+    public static String getExchangeInfoFilterValue(List<List<Map<String, String>>> exchangeInfoEntryFilters,
                                               Filter.Type filterType,
                                               String key) {
         List<Map<String, String>> temp;
@@ -279,6 +291,20 @@ public class RequestSender {
         }
 
         return null;
+    }
+
+    public static void requireLegalQuantity(BigDecimal quantity, BigDecimal lastPrice, ExchangeInfoEntry exchangeInfoEntry) throws NullPointerException, IllegalQuantityException {
+        if (quantity.compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+                Filter.Type.MARKET_LOT_SIZE,
+                Filter.Key.MIN_QTY.toString())))) < 0 ||
+                quantity.compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+                        Filter.Type.MARKET_LOT_SIZE,
+                        Filter.Key.MAX_QTY.toString())))) > 0 ||
+                quantity.multiply(lastPrice).compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+                        Filter.Type.MIN_NOTIONAL,
+                        Filter.Key.NOTIONAL.toString())))) < 0) {
+            throw new IllegalQuantityException();
+        }
     }
 
     public static String getAssetBySymbol(String symbol) {

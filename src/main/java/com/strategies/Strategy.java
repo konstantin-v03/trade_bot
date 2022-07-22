@@ -36,7 +36,7 @@ public enum Strategy {
                             Constants.GREEN_CLOSE_SHORT_PERCENTAGE,
                             Constants.LEVERAGE, Constants.TREND)
                     .collect(Collectors.toSet()),
-            Stream.of(Constants.LOG_CHAT_IDS).collect(Collectors.toSet()));
+            Stream.of(Constants.LOG_CHAT_IDS, Constants.TEST_MODE).collect(Collectors.toSet()));
 
     private final Set<PropertySE> requiredArguments;
     private final Set<PropertySE> additionalProperties;

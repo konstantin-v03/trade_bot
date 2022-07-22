@@ -96,7 +96,7 @@ public class MFI_BigGuyHandler extends StrategyHandler {
             Position position = requestSender.getPosition(ticker, PositionSide.LONG);
 
             if (position == null) {
-                requestSender.openLongPositionMarket(ticker, MarginType.ISOLATED, amount, leverage);
+                requestSender.openPositionMarket(ticker, PositionSide.LONG, MarginType.ISOLATED, amount, leverage);
                 requestSender.cancelOrders(ticker);
 
                 synchronized (lock) {

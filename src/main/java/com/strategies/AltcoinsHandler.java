@@ -1,7 +1,6 @@
 package com.strategies;
 
 import com.binance.client.model.enums.MarginType;
-import com.binance.client.model.enums.OrderSide;
 import com.binance.client.model.enums.PositionSide;
 import com.binance.client.model.trade.MyTrade;
 import com.binance.client.model.trade.Order;
@@ -46,7 +45,7 @@ public class AltcoinsHandler extends StrategyHandler {
 
             logger.logTgBot(I18nSupport.i18n_literals("pifagor.altcoins.signal",
                     pifagorAltcoinsSignal.getTicker(),
-                    pifagorAltcoinsSignal.getAction().equals(Action.BUY) ? 0 : 1,
+                    pifagorAltcoinsSignal.getAction().getEmoji(),
                     pifagorAltcoinsSignal.getAction(),
                     pifagorAltcoinsSignal.getClose()));
         } else {
@@ -59,10 +58,8 @@ public class AltcoinsHandler extends StrategyHandler {
 
         requestSender.openPositionMarket(ticker,
                 pifagorAltcoinsSignal.getAction().equals(Action.BUY) ?
-                        OrderSide.BUY : OrderSide.SELL,
-                MarginType.ISOLATED,
-                pifagorAltcoinsSignal.getAction().equals(Action.BUY) ?
                         PositionSide.LONG : PositionSide.SHORT,
+                MarginType.ISOLATED,
                 amount,
                 leverage);
 
