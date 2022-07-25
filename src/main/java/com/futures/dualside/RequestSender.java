@@ -6,11 +6,11 @@ import com.binance.client.model.enums.*;
 import com.binance.client.model.market.ExchangeInfoEntry;
 import com.binance.client.model.market.MarkPrice;
 import com.binance.client.model.trade.*;
-import com.exceptions.IllegalQuantityException;
 import com.futures.Amount;
 import com.futures.Filter;
 import com.futures.TP_SL;
 import com.utils.Calculations;
+import com.utils.I18nSupport;
 import org.jetbrains.annotations.NonNls;
 
 import java.math.BigDecimal;
@@ -32,9 +32,13 @@ public class RequestSender {
     }
 
     public synchronized Order openPositionPercentageOfMarginBalance(String symbol, PositionSide positionSide, MarginType marginType, int percentage, int leverage) throws NullPointerException, IllegalArgumentException {
+        if (percentage <= 0 || percentage > 100) {
+            throw new IllegalArgumentException(I18nSupport.i18n_literals("illegal.percentage", percentage));
+        }
+
         Position position;
 
-        if (percentage >= 100 || (position = getPosition(symbol, positionSide)) == null) {
+        if (percentage == 100 || (position = getPosition(symbol, positionSide)) == null) {
             return openPositionMarket(symbol, positionSide, marginType, new Amount(new BigDecimal(percentage), Amount.Type.PERCENT), leverage);
         }
 
@@ -52,11 +56,11 @@ public class RequestSender {
                     new Amount(buyInAdditionMargin, Amount.Type.USD),
                     leverage);
         } else {
-            throw new IllegalQuantityException();
+            throw new IllegalArgumentException();
         }
     }
 
-    public synchronized Order openPositionMarket(String symbol, PositionSide positionSide, MarginType marginType, Amount amount, int leverage) throws NullPointerException, IllegalQuantityException {
+    public synchronized Order openPositionMarket(String symbol, PositionSide positionSide, MarginType marginType, Amount amount, int leverage) throws NullPointerException, IllegalArgumentException {
         OrderSide orderSide;
 
         if (positionSide.equals(PositionSide.LONG)) {
@@ -118,7 +122,11 @@ public class RequestSender {
         return null;
     }
 
-    public synchronized Order closePositionMarket(String symbol, PositionSide positionSide, int percentage) throws NullPointerException, IllegalQuantityException{
+    public synchronized Order closePositionMarket(String symbol, PositionSide positionSide, int percentage) throws NullPointerException, IllegalArgumentException {
+        if (percentage <= 0 || percentage > 100) {
+            throw new IllegalArgumentException(I18nSupport.i18n_literals("illegal.percentage", percentage));
+        }
+
         ExchangeInfoEntry exchangeInfoEntry = getExchangeInfo(symbol);
         String quantityStr;
 
@@ -293,17 +301,32 @@ public class RequestSender {
         return null;
     }
 
-    public static void requireLegalQuantity(BigDecimal quantity, BigDecimal lastPrice, ExchangeInfoEntry exchangeInfoEntry) throws NullPointerException, IllegalQuantityException {
-        if (quantity.compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+    public static void requireLegalQuantity(BigDecimal quantity, BigDecimal lastPrice, ExchangeInfoEntry exchangeInfoEntry) throws NullPointerException, IllegalArgumentException {
+        BigDecimal minQuantity = new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
                 Filter.Type.MARKET_LOT_SIZE,
-                Filter.Key.MIN_QTY.toString())))) < 0 ||
-                quantity.compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
-                        Filter.Type.MARKET_LOT_SIZE,
-                        Filter.Key.MAX_QTY.toString())))) > 0 ||
-                quantity.multiply(lastPrice).compareTo(new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
-                        Filter.Type.MIN_NOTIONAL,
-                        Filter.Key.NOTIONAL.toString())))) < 0) {
-            throw new IllegalQuantityException();
+                Filter.Key.MIN_QTY.toString())));
+
+        BigDecimal maxQuantity = new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+                Filter.Type.MARKET_LOT_SIZE,
+                Filter.Key.MAX_QTY.toString())));
+
+        BigDecimal minNotional = new BigDecimal(Objects.requireNonNull(getExchangeInfoFilterValue(exchangeInfoEntry.getFilters(),
+                Filter.Type.MIN_NOTIONAL,
+                Filter.Key.NOTIONAL.toString())));
+
+        if (quantity.compareTo(minQuantity) < 0 || quantity.compareTo(maxQuantity) > 0) {
+            throw new IllegalArgumentException(I18nSupport.i18n_literals("illegal.quantity",
+                    quantity.toString(),
+                    minQuantity.toString(),
+                    maxQuantity.toString()));
+        }
+
+        BigDecimal notional = quantity.multiply(lastPrice);
+
+        if (notional.compareTo(minNotional) < 0) {
+            throw new IllegalArgumentException(I18nSupport.i18n_literals("illegal.notional",
+                    notional,
+                    minNotional));
         }
     }
 

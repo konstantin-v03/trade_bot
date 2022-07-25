@@ -4,7 +4,6 @@ import com.binance.client.model.enums.MarginType;
 import com.binance.client.model.enums.PositionSide;
 import com.binance.client.model.trade.MyTrade;
 import com.binance.client.model.trade.Position;
-import com.exceptions.IllegalQuantityException;
 import com.futures.dualside.RequestSender;
 import com.signal.*;
 import com.tgbot.AsyncSender;
@@ -66,9 +65,13 @@ public class SafetyHandler extends StrategyHandler {
     }
 
     public boolean open$logPositionPercentageOfMarginBalance(String ticker, PositionSide positionSide, int percentage) {
+        if (percentage == 0 ) {
+            return false;
+        }
+
         try {
             requestSender.openPositionPercentageOfMarginBalance(ticker, positionSide, MarginType.ISOLATED, percentage, leverage);
-        } catch (IllegalQuantityException illegalQuantityException) {
+        } catch (IllegalArgumentException illegalArgumentException) {
             return false;
         }
 
@@ -80,12 +83,16 @@ public class SafetyHandler extends StrategyHandler {
     }
 
     public boolean close$LogPosition(String ticker, PositionSide positionSide, int percentage) {
+        if (percentage == 0) {
+            return false;
+        }
+
         List<MyTrade> myTrades;
 
         try {
             myTrades = requestSender.getMyTrades(ticker,
                     requestSender.closePositionMarket(ticker, positionSide, percentage).getOrderId());
-        } catch (IllegalQuantityException illegalQuantityException) {
+        } catch (IllegalArgumentException illegalArgumentException) {
             return false;
         }
 
@@ -142,28 +149,27 @@ public class SafetyHandler extends StrategyHandler {
             FMA_SIGNAL fmaSignal = new FMA_SIGNAL(inputRequest);
 
             if (!testMode) {
-                Position currentLongPosition = null;
-                Position currentShortPosition = null;
+                boolean isLongOpened = false;
+                boolean isShortOpened = false;
 
                 for (Position position : requestSender.getOpenedPositions()) {
                     if (position.getSymbol().equals(ticker)) {
                         if (position.getPositionSide().equals(PositionSide.LONG.toString())) {
-                            currentLongPosition = position;
+                            isLongOpened = true;
                         } else if (position.getPositionSide().equals(PositionSide.SHORT.toString())) {
-                            currentShortPosition = position;
+                            isShortOpened = true;
                         }
                     }
                 }
 
                 switch (fmaSignal.getSmaColor()) {
                     case RED:
-                        if (currentLongPosition != null) {
+                        if (isLongOpened) {
                             close$LogPosition(ticker, PositionSide.LONG, redCloseLongPercentage);
                         }
                         break;
                     case ORANGE:
-                        if (!isOrangeLongClosed &&
-                                currentLongPosition != null &&
+                        if (!isOrangeLongClosed && isLongOpened &&
                                 close$LogPosition(ticker, PositionSide.LONG, orangeCloseLongPercentage)) {
                             isOrangeLongClosed = true;
                         }
@@ -180,8 +186,7 @@ public class SafetyHandler extends StrategyHandler {
                         }
                         break;
                     case YELLOW:
-                        if (isYellowShortClosed &&
-                                currentShortPosition != null &&
+                        if (isYellowShortClosed && isShortOpened &&
                                 close$LogPosition(ticker, PositionSide.SHORT, yellowCloseShortPercentage)) {
                             isYellowShortClosed = true;
                         }
@@ -192,7 +197,7 @@ public class SafetyHandler extends StrategyHandler {
                         }
                         break;
                     case GREEN:
-                        if (currentShortPosition != null) {
+                        if (isShortOpened) {
                             close$LogPosition(ticker, PositionSide.SHORT, greenCloseShortPercentage);
                         }
 
