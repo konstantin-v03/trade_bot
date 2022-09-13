@@ -47,7 +47,7 @@ public class SafetyHandler extends StrategyHandler {
         leverage = Integer.parseInt(strategyProps.getProperties().get(Constants.LEVERAGE.getKey()));
         trend = Trend.valueOf(strategyProps.getProperties().get(Constants.TREND.getKey()));
         debugMode = Boolean.parseBoolean(strategyProps.getProperties().get(Constants.DEBUG_MODE.getKey()));
-        testMode = Boolean.parseBoolean(strategyProps.getProperties().get(Constants.DEBUG_MODE.getKey()));
+        testMode = Boolean.parseBoolean(strategyProps.getProperties().get(Constants.TEST_MODE.getKey()));
 
         yellowOpenLongPercentage = Integer.parseInt(strategyProps.getProperties().get(Constants.YELLOW_OPEN_LONG_PERCENTAGE.getKey()));
         greenOpenLongPercentage = Integer.parseInt(strategyProps.getProperties().get(Constants.GREEN_OPEN_LONG_PERCENTAGE.getKey()));

@@ -57,7 +57,7 @@ public class TelegramTradeBot extends AbilityBot {
         for (StrategyProps strategyProps : strategyPropsList) {
             try {
                 enableStrategy(strategyProps);
-            } catch (IllegalArgumentException|NullPointerException exception) {
+            } catch (IllegalArgumentException | NullPointerException exception) {
                 asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("error.occured", exception), creatorId);
             }
         }
@@ -97,7 +97,7 @@ public class TelegramTradeBot extends AbilityBot {
                                 ctx.thirdArg().equalsIgnoreCase(Constants.NULL) ? null : ctx.thirdArg(), ctx.chatId()));
 
                         asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("strategy.enabled"), ctx.chatId());
-                    } catch (IllegalArgumentException|NullPointerException exception) {
+                    } catch (IllegalArgumentException | NullPointerException exception) {
                         asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("error.occured", exception), ctx.chatId());
                     }
                 })
@@ -116,7 +116,7 @@ public class TelegramTradeBot extends AbilityBot {
                         StrategyHandler strategyHandler = enabledStrategies.remove(Integer.parseInt(ctx.firstArg()));
                         strategyHandler.close();
                         asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("strategy.disabled"), ctx.chatId());
-                    } catch (NumberFormatException|IndexOutOfBoundsException ignored) {
+                    } catch (NumberFormatException | IndexOutOfBoundsException ignored) {
                         asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("strategy.not.found"), ctx.chatId());
                     }
                 })
@@ -136,24 +136,24 @@ public class TelegramTradeBot extends AbilityBot {
                                         strategy,
                                         strategy.getRequiredArguments() != null ?
                                                 "\n" +
-                                                strategy
-                                                        .getRequiredArguments()
-                                                        .stream()
-                                                        .map(propertySE ->
-                                                                I18nSupport.i18n_literals("required.argument",
-                                                                        propertySE.getKey(),
-                                                                        propertySE.getValueType().getSimpleName().toUpperCase()))
-                                                        .collect(Collectors.joining("\n")) : "",
+                                                        strategy
+                                                                .getRequiredArguments()
+                                                                .stream()
+                                                                .map(propertySE ->
+                                                                        I18nSupport.i18n_literals("required.argument",
+                                                                                propertySE.getKey(),
+                                                                                propertySE.getValueType().getSimpleName().toUpperCase()))
+                                                                .collect(Collectors.joining("\n")) : "",
                                         strategy.getAdditionalProperties() != null ?
                                                 "\n" +
-                                                strategy
-                                                        .getAdditionalProperties()
-                                                        .stream()
-                                                        .map(propertySE ->
-                                                                I18nSupport.i18n_literals("additional.argument",
-                                                                        propertySE.getKey(),
-                                                                        propertySE.getValueType().getSimpleName().toUpperCase()))
-                                                        .collect(Collectors.joining("\n")) : ""))
+                                                        strategy
+                                                                .getAdditionalProperties()
+                                                                .stream()
+                                                                .map(propertySE ->
+                                                                        I18nSupport.i18n_literals("additional.argument",
+                                                                                propertySE.getKey(),
+                                                                                propertySE.getValueType().getSimpleName().toUpperCase()))
+                                                                .collect(Collectors.joining("\n")) : ""))
                                 .collect(Collectors.joining("\n"))), ctx.chatId()))
                 .build();
     }
@@ -168,7 +168,7 @@ public class TelegramTradeBot extends AbilityBot {
                 .action(ctx -> {
                     StringBuilder stringBuilder =
                             new StringBuilder(I18nSupport.i18n_literals("enabled.strategies"))
-                            .append("\n\n");
+                                    .append("\n\n");
                     String enabledStrategyStr;
 
                     List<StrategyProps> strategyPropsList = enabledStrategies.stream()
@@ -274,7 +274,7 @@ public class TelegramTradeBot extends AbilityBot {
                         asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("log.chat.added",
                                 String.join(" ", strategyHandler.getStrategyProps().getTickers()),
                                 strategyHandler.getStrategyProps().getStrategy()), ctx.chatId());
-                    } catch (IndexOutOfBoundsException|NumberFormatException ignored) {
+                    } catch (IndexOutOfBoundsException | NumberFormatException ignored) {
                         asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("log.chat.not.added"), ctx.chatId());
                     }
                 })
@@ -300,7 +300,7 @@ public class TelegramTradeBot extends AbilityBot {
                         asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("log.chat.added",
                                 String.join(" ", strategyHandler.getStrategyProps().getTickers()),
                                 strategyHandler.getStrategyProps().getStrategy()), logChatIds);
-                    } catch (NumberFormatException|IndexOutOfBoundsException ignored) {
+                    } catch (NumberFormatException | IndexOutOfBoundsException ignored) {
                         asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("log.chat.not.added"), ctx.chatId());
                     }
                 })
@@ -320,6 +320,8 @@ public class TelegramTradeBot extends AbilityBot {
             enabledStrategies.add(new ChiaAlarmHandler(requestSender, strategyProps, asyncSender));
         } else if (strategyProps.getStrategy().equals(Strategy.SAFETY)) {
             enabledStrategies.add(new SafetyHandler(requestSender, strategyProps, asyncSender, creatorId));
+        } else if (strategyProps.getStrategy().equals(Strategy.DEFAULT_STRATEGY)) {
+            enabledStrategies.add(new DefaultStrategy(requestSender, strategyProps, asyncSender));
         } else {
             throw new IllegalArgumentException("Strategy is not supported!");
         }

@@ -7,7 +7,6 @@ import com.binance.client.model.trade.Order;
 import com.binance.client.model.trade.Position;
 import com.futures.Amount;
 import com.futures.dualside.RequestSender;
-import com.signal.ALARM_SIGNAL;
 import com.signal.Action;
 import com.signal.Indicator;
 import com.signal.PIFAGOR_ALTCOINS_SIGNAL;
@@ -78,7 +77,7 @@ public class AltcoinsHandler extends StrategyHandler {
 
     @Override
     public boolean isSupportedSignal(Class<?> signal, String ticker) {
-        return this.ticker.equals(ticker) && signal.equals(ALARM_SIGNAL.class);
+        return this.ticker.equals(ticker) && signal.equals(PIFAGOR_ALTCOINS_SIGNAL.class);
     }
 
     @Override

@@ -100,7 +100,7 @@ public class MFI_BigGuyHandler extends StrategyHandler {
                 requestSender.cancelOrders(ticker);
 
                 synchronized (lock) {
-                    logger.logTP_SLOrders(tp_sl = requestSender.postTP_SLOrders(ticker,
+                    logger.logTP_SLOrders(tp_sl = requestSender.postTP_SLOrdersPercent(ticker,
                             PositionSide.LONG,
                             takeProfit,
                             stopLoss));

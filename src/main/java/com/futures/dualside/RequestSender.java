@@ -167,7 +167,7 @@ public class RequestSender {
                 NewOrderRespType.ACK);
     }
 
-    public synchronized TP_SL postTP_SLOrders(String symbol, PositionSide positionSide, int takeProfitPercent, int stopLossPercent) {
+    public synchronized TP_SL postTP_SLOrdersPercent(String symbol, PositionSide positionSide, int takeProfitPercent, int stopLossPercent) {
         OrderSide orderSide = positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY;
         Position position = getPosition(symbol, positionSide);
 
@@ -218,6 +218,57 @@ public class RequestSender {
         return tp_sl;
     }
 
+    public synchronized TP_SL postTP_SLOrdersPrice(String symbol, PositionSide positionSide, BigDecimal takeProfitPrice, BigDecimal stopLossPrice) {
+        OrderSide orderSide = positionSide.equals(PositionSide.LONG) ? OrderSide.SELL : OrderSide.BUY;
+        Position position = getPosition(symbol, positionSide);
+
+        TP_SL tp_sl = null;
+
+        if (position != null) {
+            tp_sl = new TP_SL(takeProfitPrice, stopLossPrice);
+
+            if (stopLossPrice != null && !stopLossPrice.equals(BigDecimal.ZERO)) {
+                tp_sl.setStopLossOrder(syncRequestClient.postOrder(symbol,
+                        orderSide,
+                        positionSide,
+                        OrderType.STOP_MARKET,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        tp_sl.getStopLossPrice().toString(),
+                        "true",
+                        null,
+                        null,
+                        null,
+                        null,
+                        NewOrderRespType.ACK));
+            }
+
+            if (takeProfitPrice != null && !takeProfitPrice.equals(BigDecimal.ZERO)) {
+                tp_sl.setTakeProfitOrder(syncRequestClient.postOrder(symbol,
+                        orderSide,
+                        positionSide,
+                        OrderType.TAKE_PROFIT_MARKET,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        tp_sl.getTakeProfitPrice().toString(),
+                        "true",
+                        null,
+                        null,
+                        null,
+                        null,
+                        NewOrderRespType.ACK));
+            }
+        }
+
+        return tp_sl;
+    }
+
     public List<MyTrade> getMyTrades(String symbol, Long orderId) {
         List<MyTrade> myTrades = syncRequestClient.getAccountTrades(symbol, null, null, null, null)
                 .stream()
@@ -246,6 +297,10 @@ public class RequestSender {
                 .collect(Collectors.toList());
 
         return accountBalances.size() == 1 ? accountBalances.get(0).getMaxWithdrawAmount() : null;
+    }
+
+    public Order cancelOrder(String symbol, Long orderId) {
+        return symbol != null && orderId != null ? syncRequestClient.cancelOrder(symbol, orderId, null) : null;
     }
 
     public ResponseResult cancelOrders(String symbol) {

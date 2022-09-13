@@ -35,5 +35,4 @@ public final class PIFAGOR_ALTCOINS_SIGNAL extends Signal {
                 "action=" + action +
                 "} " + super.toString();
     }
-
 }

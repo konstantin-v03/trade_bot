@@ -65,6 +65,7 @@ public class TradeBot implements HttpHandler {
             }
 
         } catch (RuntimeException exception) {
+            exception.printStackTrace();
             telegramTradeBot.asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("error.occured", exception), telegramTradeBot.creatorId());
         }
     }

@@ -50,7 +50,9 @@ public enum Indicator {
     FMA(
             Stream.of(FMA_SIGNAL.class).collect(Collectors.toSet())),
     ADX_DI(
-            Stream.of(ADX_DI_SIGNAL.class).collect(Collectors.toSet()));
+            Stream.of(ADX_DI_SIGNAL.class).collect(Collectors.toSet())),
+    DEFAULT_STRATEGY(
+            Stream.of(DEFAULT_STRATEGY_SIGNAL.class).collect(Collectors.toSet()));
 
     private final Set<Class<?>> signals;
     private final String alias;
