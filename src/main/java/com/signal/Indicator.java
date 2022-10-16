@@ -52,7 +52,15 @@ public enum Indicator {
     ADX_DI(
             Stream.of(ADX_DI_SIGNAL.class).collect(Collectors.toSet())),
     DEFAULT_STRATEGY(
-            Stream.of(DEFAULT_STRATEGY_SIGNAL.class).collect(Collectors.toSet()));
+            Stream.of(DEFAULT_STRATEGY_SIGNAL.class).collect(Collectors.toSet())),
+    PIFAGOR_BIG_GUY_GREEN_DOT("BIG GUY GREEN DOT",
+            Stream.of(ALARM_SIGNAL.class).collect(Collectors.toSet()), "\uD83D\uDFE2"),
+    PIFAGOR_BIG_GUY_VOLUME_UP("BIG GUY VOLUME UP",
+            Stream.of(ALARM_SIGNAL.class).collect(Collectors.toSet()), "❕"),
+    RADAR_BUY("RADAR BUY",
+            Stream.of(ALARM_SIGNAL.class).collect(Collectors.toSet()), "✅"),
+    RADAR_SELL("RADAR SELL",
+            Stream.of(ALARM_SIGNAL.class).collect(Collectors.toSet()), "❌");
 
     private final Set<Class<?>> signals;
     private final String alias;
