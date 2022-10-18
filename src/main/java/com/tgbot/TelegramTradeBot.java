@@ -87,14 +87,16 @@ public class TelegramTradeBot extends AbilityBot {
                 .info(I18nSupport.i18n_literals("enable.strategy.info"))
                 .privacy(Privacy.CREATOR)
                 .locality(Locality.USER)
-                .input(3)
+                .input(4)
                 .action(ctx -> {
                     try {
                         String[] tickers = ctx.secondArg().split(",");
+                        String[] blacklistTickers = ctx.thirdArg().split(",");
 
                         enableStrategy(new StrategyProps(Strategy.valueOf(ctx.firstArg()),
                                 tickers.length == 1 && tickers[0].equalsIgnoreCase(Constants.NULL) ? null : Arrays.asList(tickers),
-                                ctx.thirdArg().equalsIgnoreCase(Constants.NULL) ? null : ctx.thirdArg(), ctx.chatId()));
+                                blacklistTickers.length == 1 && blacklistTickers[0].equalsIgnoreCase(Constants.NULL) ? null : Arrays.asList(blacklistTickers),
+                                ctx.arguments()[3].equalsIgnoreCase(Constants.NULL) ? null : ctx.arguments()[3], ctx.chatId()));
 
                         asyncSender.sendTextMsgAsync(I18nSupport.i18n_literals("strategy.enabled"), ctx.chatId());
                     } catch (IllegalArgumentException | NullPointerException exception) {
@@ -185,6 +187,9 @@ public class TelegramTradeBot extends AbilityBot {
                                 strategyProps.getStrategy(),
                                 strategyProps.getTickers().size() > 0 ?
                                         String.join("\n", strategyProps.getTickers()) :
+                                        I18nSupport.i18n_literals("any.ticker"),
+                                strategyProps.getBlacklistTickers().size() > 0 ?
+                                        String.join("\n", strategyProps.getBlacklistTickers()) :
                                         I18nSupport.i18n_literals("any.ticker"),
                                 Stream.of(strategyProps.getLogChatIds())
                                         .map(String::valueOf).collect(Collectors.joining(",")),

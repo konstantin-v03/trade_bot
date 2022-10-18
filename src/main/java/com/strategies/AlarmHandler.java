@@ -118,6 +118,10 @@ public class AlarmHandler extends StrategyHandler {
 
     @Override
     public boolean isSupportedSignal(Class<?> signal, String ticker) {
+        if (strategyProps.getBlacklistTickers().contains(ticker)) {
+            return false;
+        }
+
         return !(strategyProps.getTickers().size() > 0 && !strategyProps.getTickers().contains(ticker))
                 && (signal.equals(ALARM_SIGNAL.class) || signal.equals(STRATEGY_ALARM_SIGNAL.class));
     }

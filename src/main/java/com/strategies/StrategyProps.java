@@ -11,12 +11,14 @@ public class StrategyProps implements Serializable {
 
     private final Strategy strategy;
     private final List<String> tickers;
+    private final List<String> blacklistTickers;
     private final Map<String, String> properties;
     private final List<Long> logChatIds;
 
-    public StrategyProps(Strategy strategy, List<String> tickers, String propertiesString, long chatId) {
+    public StrategyProps(Strategy strategy, List<String> tickers, List<String> blacklistTickers, String propertiesString, long chatId) {
         this.strategy = strategy;
         this.tickers = Collections.unmodifiableList(tickers == null ? new ArrayList<>() : tickers);
+        this.blacklistTickers = Collections.unmodifiableList(blacklistTickers == null ? new ArrayList<>() : blacklistTickers);
 
         Map<String, String> properties = new HashMap<>();
 
@@ -50,6 +52,10 @@ public class StrategyProps implements Serializable {
 
     public List<String> getTickers() {
         return tickers;
+    }
+
+    public List<String> getBlacklistTickers() {
+        return blacklistTickers;
     }
 
     public Map<String, String> getProperties() {
