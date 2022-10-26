@@ -35,6 +35,13 @@ public class Scheduler {
         return new Scheduler(scheduledExecutorService);
     }
 
+    public static Scheduler scheduleEverySecond(Runnable command, int second) {
+        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+        scheduledExecutorService.scheduleAtFixedRate(command , 0, second, TimeUnit.SECONDS);
+
+        return new Scheduler(scheduledExecutorService);
+    }
+
     public void shutdown() {
         scheduledExecutorService.shutdown();
     }

@@ -21,7 +21,11 @@ public class Constants {
     public static final PropertySE TEST_MODE = new PropertySE("testMode", Boolean.class);
     public static final PropertySE IS_LOG_ONCE_PER_MINUTE = new PropertySE("isLogOncePerMinute", Boolean.class);
 
+    public static final PropertySE TOKEN_SYMBOL = new PropertySE("tokenSymbol", String.class);
+    public static final PropertySE CONTRACT_ADDRESS = new PropertySE("contractAddress", String.class);
     public static final PropertySE ADDRESS = new PropertySE("address", String.class);
+    public static final PropertySE API_KEY = new PropertySE("apiKey", String.class);
+    public static final PropertySE DECIMALS = new PropertySE("decimals", Integer.class);
     public static final PropertySE ALIAS = new PropertySE("alias", String.class);
 
     public static final PropertySE TREND = new PropertySE("trend", Trend.class);

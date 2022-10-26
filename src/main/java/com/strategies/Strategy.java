@@ -39,7 +39,16 @@ public enum Strategy {
             Stream.of(Constants.LOG_CHAT_IDS, Constants.TEST_MODE).collect(Collectors.toSet())),
     DEFAULT_STRATEGY(
             Stream.of(Constants.AMOUNT, Constants.LEVERAGE).collect(Collectors.toSet()),
-            Stream.of(Constants.DEBUG_MODE, Constants.TEST_MODE).collect(Collectors.toSet()));
+            Stream.of(Constants.DEBUG_MODE, Constants.TEST_MODE).collect(Collectors.toSet())),
+    ETH_BALANCE_ALARM(
+            Stream.of(Constants.ADDRESS, Constants.API_KEY, Constants.ALIAS).collect(Collectors.toSet()),
+            Stream.of(Constants.DECIMALS, Constants.TOKEN_SYMBOL, Constants.CONTRACT_ADDRESS, Constants.LOG_CHAT_IDS).collect(Collectors.toSet())),
+    INTERLAY_BALANCE_ALARM(
+            Stream.of(Constants.ADDRESS, Constants.API_KEY, Constants.ALIAS).collect(Collectors.toSet()),
+            Stream.of(Constants.LOG_CHAT_IDS).collect(Collectors.toSet())),
+    MINA_BALANCE_ALARM(
+            Stream.of(Constants.ADDRESS, Constants.ALIAS).collect(Collectors.toSet()),
+            Stream.of(Constants.LOG_CHAT_IDS).collect(Collectors.toSet()));
 
     private final Set<PropertySE> requiredArguments;
     private final Set<PropertySE> additionalProperties;

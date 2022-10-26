@@ -322,11 +322,17 @@ public class TelegramTradeBot extends AbilityBot {
         } else if (strategyProps.getStrategy().equals(Strategy.ALARM)) {
             enabledStrategies.add(new AlarmHandler(requestSender, strategyProps, asyncSender, creatorId));
         } else if (strategyProps.getStrategy().equals(Strategy.CHIA_BALANCE_ALARM)) {
-            enabledStrategies.add(new ChiaAlarmHandler(requestSender, strategyProps, asyncSender));
+            enabledStrategies.add(new ChiaBalanceAlarmHandler(requestSender, strategyProps, asyncSender));
         } else if (strategyProps.getStrategy().equals(Strategy.SAFETY)) {
             enabledStrategies.add(new SafetyHandler(requestSender, strategyProps, asyncSender, creatorId));
         } else if (strategyProps.getStrategy().equals(Strategy.DEFAULT_STRATEGY)) {
             enabledStrategies.add(new DefaultStrategy(requestSender, strategyProps, asyncSender));
+        } else if (strategyProps.getStrategy().equals(Strategy.ETH_BALANCE_ALARM)){
+            enabledStrategies.add(new EthBalanceAlarmHandler(requestSender, strategyProps, asyncSender));
+        } else if (strategyProps.getStrategy().equals(Strategy.INTERLAY_BALANCE_ALARM)){
+            enabledStrategies.add(new InterlayBalanceAlarmHandler(requestSender, strategyProps, asyncSender));
+        } else if (strategyProps.getStrategy().equals(Strategy.MINA_BALANCE_ALARM)){
+            enabledStrategies.add(new MinaBalanceAlarmHandler(requestSender, strategyProps, asyncSender));
         } else {
             throw new IllegalArgumentException("Strategy is not supported!");
         }
