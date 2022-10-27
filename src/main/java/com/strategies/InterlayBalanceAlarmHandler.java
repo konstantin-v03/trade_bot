@@ -73,6 +73,6 @@ public class InterlayBalanceAlarmHandler extends BalanceAlarmHandler {
         logger.logTgBot(I18nSupport.i18n_literals("interlay.balance.changed",
                 alias,
                 String.format("%.1f", currBalance),
-                "+" + String.format("%.1f", currBalance.subtract(lastBalance))));
+                "-" + String.format("%.1f", lastBalance.subtract(currBalance))));
     }
 }
