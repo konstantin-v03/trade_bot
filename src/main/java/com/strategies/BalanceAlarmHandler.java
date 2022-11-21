@@ -54,7 +54,7 @@ public abstract class BalanceAlarmHandler extends StrategyHandler {
                         .newCall(requestBuilder.build())
                         .execute();
             } catch (IOException ioException) {
-                logger.logException(ioException);
+//                logger.logException(ioException);
                 return;
             }
 
@@ -68,7 +68,7 @@ public abstract class BalanceAlarmHandler extends StrategyHandler {
                         .lines()
                         .collect(Collectors.joining("\n"))));
             } catch (JSONException jsonException) {
-                logger.logException(jsonException);
+//                logger.logException(jsonException);
                 return;
             }
 
